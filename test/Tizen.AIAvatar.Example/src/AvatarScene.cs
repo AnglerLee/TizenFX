@@ -27,6 +27,8 @@ using Tizen.Uix.Tts;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using System.Net.Http;
+using System.Reflection.Metadata;
+using System.Text;
 
 namespace AIAvatar
 {
@@ -257,8 +259,12 @@ namespace AIAvatar
         {
             Random rand = new Random(); // 랜덤 객체 생성  
 
-            string bearerToken = "hidden";
-            string bearerToken2 = "hidden";
+            var bytes = File.ReadAllBytes(Tizen.Applications.Application.Current.DirectoryInfo.Resource + "tokens.bin");
+            string tokenString = Encoding.UTF8.GetString(bytes);
+            var tokens = JsonConvert.DeserializeObject<string[]>(tokenString);
+
+            string bearerToken = tokens[0];
+            string bearerToken2 = tokens[1];
             string jsonData = "{\"messages\": [{\"role\": \"user\", \"content\": \"" + text + " [출력] 'A sentence that contains emotions'\"}], \"temperature\": 0.5 \n}";
 
             List<string> emotions = new List<string> { "joy", "trust",  "fear", "surprise", "sadness", "disgust", "anger", "anticipation" };

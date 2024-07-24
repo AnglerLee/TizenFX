@@ -238,6 +238,7 @@ namespace AIAvatar
 
             AddControlButton("TTS Init", "button_avatar", mainScene.InintTTsTest);
             AddControlButton("TTS Start", "button_avatar", mainScene.StartTTSTest);
+            AddControlButton("TTS to the Response", "button_avatar", mainScene.StartLLMTest);
             AddControlButton("TTS Stop", "button_avatar", mainScene.StopTTSTest);
             AddControlButton("CZ", "button_avatar", mainScene.StartAvatarTalk_1);
             AddControlButton("DK", "button_avatar", mainScene.StartAvatarTalk_2);
