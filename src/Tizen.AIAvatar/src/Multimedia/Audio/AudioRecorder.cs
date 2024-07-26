@@ -35,7 +35,7 @@ namespace Tizen.AIAvatar
 
         private Timer audioRecordingTimer;
 
-        private Action audioRecdingAction;
+        private Action audioRecodingAction;
         private Action<byte[], int> bufferAction;
 
         private static AudioRecorder instance;
@@ -68,7 +68,7 @@ namespace Tizen.AIAvatar
                 Tizen.Log.Error(LogTag, "LipSyncer of animator is null");
                 return;
             }
-            this.audioRecdingAction = lipSyncer.OnRecodingTick;
+            this.audioRecodingAction = lipSyncer.OnTick;
             this.bufferAction = lipSyncer.OnRecordBufferChanged;
 
             BufferChanged += OnRecordBufferChanged;
@@ -89,7 +89,7 @@ namespace Tizen.AIAvatar
                 audioRecordingTimer.Dispose();
                 audioRecordingTimer = null;
             }
-            audioRecdingAction = null;
+            audioRecodingAction = null;
         }
 
         internal void StartRecording()
@@ -137,7 +137,7 @@ namespace Tizen.AIAvatar
         private bool AudioRecordingTimerTick(object source, Timer.TickEventArgs e)
         {
             Log.Info(LogTag, "TickTimer");
-            audioRecdingAction?.Invoke();
+            audioRecodingAction?.Invoke();
             return true;
         }
 

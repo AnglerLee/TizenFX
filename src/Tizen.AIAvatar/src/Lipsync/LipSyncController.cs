@@ -24,23 +24,30 @@ using static Tizen.AIAvatar.AIAvatar;
 using Tizen.Multimedia;
 using Tizen.NUI.Scene3D;
 using Tizen.NUI;
+using ElmSharp;
 
 namespace Tizen.AIAvatar
 {
-     /// <summary>
-     /// A controller class used to manage lip sync functionality for avatars.
-     /// </summary>
+    /// <summary>
+    /// A controller class used to manage lip sync functionality for avatars.
+    /// </summary>
     [EditorBrowsable(EditorBrowsableState.Never)]
     public class LipSyncController : IDisposable
     {
         private TTSController ttsController;
         private AudioRecorder audioRecorder;
+        private AudioPlayer audioPlayer;
         private LipSyncer lipSyncer;
 
         private Avatar avatar;
 
         private event EventHandler ttsReadyFinished;
         private readonly Object ttsReadyFinishedLock = new Object();
+
+        private readonly uint asyncPlayTime = 160;
+        private Tizen.NUI.Timer asyncPlayTimer;
+
+        //internal AudioPlayer AudioPlayer { get { return audioPlayer; } }
 
         /// <summary>  
         /// Initializes a new instance of the <see cref="LipSyncController"/> class.  
@@ -51,6 +58,7 @@ namespace Tizen.AIAvatar
             this.avatar = avatar;
 
             audioRecorder = new AudioRecorder();
+            audioPlayer = new AudioPlayer();
             lipSyncer = new LipSyncer();
 
             lipSyncer.CreatedKeyFrameAnimation += OnCreatedKeyFrameAnimation;
@@ -154,7 +162,11 @@ namespace Tizen.AIAvatar
                     //TODO : LipSync Event Connect
                     ttsController.PreparedSyncText += OnPreparedSyncText;
                     ttsController.StoppedTTS += OnStoppedTTS;
-                    ttsController.UpdatedBuffer += OnUpdatedBuffer;
+                    ttsController.bufferChangedAudioAction = audioPlayer.AddStreamList;
+                    ttsController.bufferChangedLipSyncAction = lipSyncer.OnRecordBufferChanged;
+                    ttsController.AsyncReadyCallback += AsyncReady;
+
+
                 }
                 catch (Exception e)
                 {
@@ -164,38 +176,58 @@ namespace Tizen.AIAvatar
             }
         }
 
-        private void OnUpdatedBuffer(object sender, TTSControllerEventArgs e)
+        internal void StartAsyncLipPlayTimer()
         {
-            throw new NotImplementedException();
-            if (lipSyncer != null)
+
+            if (asyncPlayTimer == null)
             {
-                Log.Error(LogTag, "OnTTSBufferChanged");
-                /*
-                lipSyncer.EnqueueAnimation(recordBuffer, sampleRate, audioLength);
-                if (!isAsyncLipStarting)
-                {
-                    lipSyncer.StartAsyncLipPlayTimer();
-                    isAsyncLipStarting = true;
-                }*/
+                Tizen.Log.Info(LogTag, "Start Async");
+                asyncPlayTimer = new Tizen.NUI.Timer(asyncPlayTime);
+                asyncPlayTimer.Tick += OnAsyncPlayTick;
+                asyncPlayTimer.Start();
             }
-            else
+            return;
+        }
+
+
+        private bool OnAsyncPlayTick(object source, Tizen.NUI.Timer.TickEventArgs e)
+        {
+            if (!audioPlayer.IsPrepareSound(5))
             {
-                Log.Error(LogTag, "avatarLipSyncer is null");
+                return true;
             }
+
+            audioPlayer.PlayAsync();
+            return lipSyncer.AnimateQueueHasValues();
+        }
+
+        private void DestroyVowelTimer()
+        {
+            if (asyncPlayTimer != null)
+            {
+                asyncPlayTimer.Tick -= OnAsyncPlayTick;
+                asyncPlayTimer.Stop();
+                asyncPlayTimer.Dispose();
+                asyncPlayTimer = null;
+            }
+
         }
 
         private void OnStoppedTTS(object sender, TTSControllerEventArgs e)
         {
             lipSyncer.Stop();
+            audioPlayer.Stop();
+            DestroyVowelTimer();
         }
 
         private void OnPreparedSyncText(object sender, TTSControllerEventArgs e)
         {
             var data = e.AudioData;
             var sampleRate = e.SampleRate;
-            
+
             // Play Lipsync Animation by Audio
-            lipSyncer.PlayAudio(data, sampleRate);
+            lipSyncer.Play(data, sampleRate);
+            audioPlayer.Play(data, sampleRate);
         }
 
         /// <summary>  
@@ -243,7 +275,9 @@ namespace Tizen.AIAvatar
                 Log.Error(LogTag, "lipSyncer is null");
                 return false;
             }
-            lipSyncer.PlayAudio(audio, sampleRate);
+            lipSyncer.Play(audio, sampleRate);
+            audioPlayer.Play(audio, sampleRate);
+
 
             return true;
         }
@@ -263,7 +297,8 @@ namespace Tizen.AIAvatar
                 Log.Error(LogTag, "audio data is null");
                 return false;
             }
-            lipSyncer.PlayAudio(audio, sampleRate);
+            lipSyncer.Play(audio, sampleRate);
+            audioPlayer.Play(audio, sampleRate);
 
             return true;
         }
@@ -453,6 +488,12 @@ namespace Tizen.AIAvatar
             return true;
         }
 
+        private void AsyncReady(object sender, EventArgs e)
+        {
+            audioPlayer.InitStreamList();
+            StartAsyncLipPlayTimer();
+        }
+
         /// <summary>  
         /// Asynchronously converts the given text into speech using the specified voice info and plays the resulting audio once it's ready.  
         /// </summary>  
@@ -486,6 +527,8 @@ namespace Tizen.AIAvatar
             {
                 ttsController.AddText(text, voiceInfo);
                 ttsController.PlayAsync(ttsReadyFinishedCallback);
+
+
             }
             catch (Exception e)
             {
@@ -554,6 +597,7 @@ namespace Tizen.AIAvatar
             {
                 Log.Info(LogTag, "Current TTS State :" + ttsController.TtsHandle.CurrentState);
                 ttsController?.Pause();
+                DestroyVowelTimer();
             }
             catch (Exception e)
             {
@@ -578,6 +622,7 @@ namespace Tizen.AIAvatar
             {
                 Log.Info(LogTag, "Current TTS State :" + ttsController.TtsHandle.CurrentState);
                 ttsController?.Stop();
+                DestroyVowelTimer();
             }
             catch (Exception e)
             {
@@ -638,7 +683,7 @@ namespace Tizen.AIAvatar
 
         public void ResumeMic()
         {
-            if(audioRecorder == null)
+            if (audioRecorder == null)
             {
                 Tizen.Log.Error(LogTag, "audio record is null");
                 return;

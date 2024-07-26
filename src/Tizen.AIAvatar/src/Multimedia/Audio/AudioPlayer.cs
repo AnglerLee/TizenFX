@@ -1,5 +1,5 @@
 ﻿/*
- * Copyright(c) 2024 Samsung Electronics Co., Ltd.
+ * Copyright(c) 2023 Samsung Electronics Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,6 +15,8 @@
  *
  */
 
+using System.Linq;
+using System.Collections.Generic;
 using Tizen.Multimedia;
 using System.IO;
 using System;
@@ -23,24 +25,102 @@ using static Tizen.AIAvatar.AIAvatar;
 
 namespace Tizen.AIAvatar
 {
-    internal class AudioPlayer : IDisposable
+    internal class AudioPlayer
     {
         private AudioPlayback audioPlayback;
         private MemoryStream audioStream;
+        private List<MemoryStream> streamList;
+        private int streamIndex = 0;
+        int accLength = 0;
 
         internal AudioPlayer()
         {
+            if (streamList == null)
+            {
+                streamList = new List<MemoryStream>();
+            }
         }
 
-        internal void PlayAsync(byte[] buffer, int sampleRate = 0)
+        internal void InitStreamList()
         {
-            if (audioPlayback == null)
+            streamList.Clear();
+        }
+
+        internal void AddStreamList(byte[] buffer)
+        {
+            var audioStream = new MemoryStream(buffer);
+            streamList.Add(audioStream);
+        }
+
+        internal bool IsPrepareSound(int minBufferSize = 0)
+        {
+            return streamList.Count > minBufferSize;
+        }
+
+        internal void PlayAsync(int sampleRate = 0)
+        {
+            if (audioPlayback != null)
             {
-                Play(buffer, sampleRate);
+                return;
             }
-            else
+
+            if (streamList.Count <= 0)
             {
-                audioPlayback.Write(buffer);
+                Tizen.Log.Error(LogTag, "StreamList Count is 0");
+                return;
+            }
+
+            try
+            {
+                InitAudio(sampleRate);
+            }
+            catch (Exception e)
+            {
+                Log.Error(LogTag, $"Failed to create AudioPlayback. {e.Message}");
+                return;
+            }
+                        
+            if (audioPlayback != null)
+            {
+                audioPlayback.Prepare();
+                audioStream = streamList[streamIndex];
+                accLength = (int)audioStream.Length;
+              
+                audioPlayback.BufferAvailable += (sender, args) =>
+                {
+                    if (audioStream.Position == audioStream.Length)
+                    {
+                        streamIndex++;
+                        if (streamIndex >= streamList.Count)
+                        {
+                            return;
+                        }
+
+                        audioStream = streamList[streamIndex];
+                        accLength = (int)audioStream.Length;
+                    }
+
+                    try
+                    {
+                        if (args.Length > 0)
+                        {
+                            accLength -= args.Length;
+                            int length = args.Length;
+                            if (accLength < 0)
+                            {
+                                length += accLength;
+                            }
+
+                            var buffer = new byte[length];
+                            audioStream.Read(buffer, 0, length);
+                            audioPlayback.Write(buffer);
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        Log.Error(LogTag, $"Failed to write. {e.Message}");
+                    }
+                };
             }
         }
 
@@ -53,24 +133,22 @@ namespace Tizen.AIAvatar
 
             try
             {
-                if (audioPlayback != null)
-                {
-                    Destroy();
-                }
-                if (sampleRate == 0)
-                {
-                    sampleRate = CurrentAudioOptions.SampleRate;
-                }
-                audioPlayback = new AudioPlayback(sampleRate, CurrentAudioOptions.Channel, CurrentAudioOptions.SampleType);
+                InitAudio(sampleRate);
+                streamList = new List<MemoryStream>();
             }
             catch (Exception e)
             {
                 Log.Error(LogTag, $"Failed to create AudioPlayback. {e.Message}");
+                return;
             }
 
             if (audioPlayback != null)
             {
                 audioPlayback.Prepare();
+
+                audioStream = new MemoryStream(audioBytes);
+                accLength = (int)audioStream.Length;
+
                 audioPlayback.BufferAvailable += (sender, args) =>
                 {
                     if (audioStream.Position == audioStream.Length)
@@ -80,17 +158,18 @@ namespace Tizen.AIAvatar
 
                     try
                     {
-                        var buffer = new byte[args.Length];
-                        audioStream.Read(buffer, 0, args.Length);
-                        audioPlayback.Write(buffer);
+                        if (args.Length > 0)
+                        {
+                            var buffer = new byte[args.Length];
+                            audioStream.Read(buffer, 0, args.Length);
+                            audioPlayback.Write(buffer);
+                        }
                     }
                     catch (Exception e)
                     {
                         Log.Error(LogTag, $"Failed to write. {e.Message}");
                     }
                 };
-
-                audioStream = new MemoryStream(audioBytes);
             }
         }
 
@@ -110,8 +189,9 @@ namespace Tizen.AIAvatar
         {
             if (audioPlayback != null)
             {
+                streamList.Clear();
                 audioPlayback.Pause();
-                Destroy();
+                DestroyAudioPlayback();
             }
             else
             {
@@ -119,16 +199,30 @@ namespace Tizen.AIAvatar
             }
         }
 
-        public void Dispose()
+        internal void Destroy()
         {
-            Destroy();
-
-            audioStream?.Flush();
-            audioStream?.Dispose();
-            audioStream = null;
+            DestroyAudioPlayback();
+            streamList.Clear();
+            streamList = null;
         }
 
-        private void Destroy()
+        private void InitAudio(int sampleRate)
+        {
+            if (audioPlayback != null)
+            {
+                DestroyAudioPlayback();
+            }
+            if (sampleRate == 0)
+            {
+                sampleRate = CurrentAudioOptions.SampleRate;
+            }
+
+            streamIndex = 0;
+
+            audioPlayback = new AudioPlayback(sampleRate, CurrentAudioOptions.Channel, CurrentAudioOptions.SampleType);
+        }
+
+        private void DestroyAudioPlayback()
         {
             audioPlayback?.Unprepare();
             audioPlayback?.Dispose();

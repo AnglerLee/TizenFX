@@ -101,6 +101,9 @@ namespace AIAvatar
             // Load Default Animations
             LoadDefaultAnimations();
 
+            //
+            InitTTS();
+
             // Setup RestClinet
             RestClientFactory restClientFactory = new RestClientFactory();
             restClient = restClientFactory.CreateClient(playgroundURL);
@@ -306,15 +309,15 @@ namespace AIAvatar
                     string[] words = emotion.Split(' ');
                     string firstWord = words[0];
                     
-                    string tts_text = "normal";
+                    string detectedEmotion = "normal";
                     int index = emotions.IndexOf(firstWord.ToLower());
                     if (index != -1)
                     {
-                        tts_text = emotions[index];
+                        detectedEmotion = emotions[index];
                     }
 
                     ChangeEmojiStatus(index + 1);
-                    Log.Info("Tizen.AIAvatar.LLM", "emotion : " + tts_text);
+                    Log.Info("Tizen.AIAvatar.LLM", "emotion : " + detectedEmotion);
 
                     //TTS 호출
                     VoiceInfo voiceInfo = new VoiceInfo()
@@ -323,10 +326,10 @@ namespace AIAvatar
                         Type = VoiceType.Female,
                     };
 
-                    lipSyncController.PrepareTTS(content, voiceInfo, (o, e) =>
+                    lipSyncController.PlayTTSAsync(content, voiceInfo, (o, e) =>
                     {
-                        ContextAnimation(tts_text);
-                        lipSyncController.PlayPreparedTTS();
+                        ContextAnimation(detectedEmotion);
+                        //lipSyncController.PlayPreparedTTS();
                     });
                 }
 
@@ -346,6 +349,18 @@ namespace AIAvatar
             });
 
         }
+        public void StartTTSAsyncTest()
+        {
+            lipSyncController.StopTTS();
+            VoiceInfo voiceInfo = new VoiceInfo()
+            {
+                Language = "en_US",
+                Type = VoiceType.Female,
+            };
+
+            lipSyncController.PlayTTSAsync(Utils.TTSText, voiceInfo);
+        }
+
         public void StartTTSTest()
         {
             lipSyncController.StopTTS();
@@ -394,7 +409,7 @@ namespace AIAvatar
                 avatarIndex = 0;
             }
             CreateAvatar();
-
+            InitTTS();
         }
 
         internal static string GetFileNameWithoutExtension(string path)
@@ -467,8 +482,11 @@ namespace AIAvatar
                 /*
                 var animator = defaultAIAvatar.CurrentAnimator;
                 animator.MotionStateChanged -= OnMotionStateChanged;
-                animator.LipStateChanged -= OnLipStateChanged;
-*/
+                animator.LipStateChanged -= OnLipStateChanged;*/
+
+                lipSyncController.StopTTS();
+                lipSyncController = null;
+
                 defaultAIAvatar.Dispose();
                 defaultAIAvatar = null;
             }

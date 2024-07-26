@@ -111,6 +111,10 @@ namespace Tizen.AIAvatar
 
 internal class SystemUtils
 {
+    internal static void SystemSleep(int duration)
+    {
+        System.Threading.Thread.Sleep(duration);
+    }
     internal static string GetFileName(string path)
     {
         return System.IO.Path.GetFileName(path);
@@ -119,4 +123,6 @@ internal class SystemUtils
     {
         return System.IO.Path.GetFileNameWithoutExtension(path);
     }
+
+    internal static System.Diagnostics.Stopwatch SW = new System.Diagnostics.Stopwatch();
 }

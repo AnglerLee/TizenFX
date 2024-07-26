@@ -236,8 +236,9 @@ namespace AIAvatar
             AddControlButton("Random Animation", "button_bvh", mainScene.StartRandomAnimation);
             AddControlButton("EyeBlink", "button_bvh", mainScene.EyeBlink);
 
-            AddControlButton("TTS Init", "button_avatar", mainScene.InintTTsTest);
+            //AddControlButton("TTS Init", "button_avatar", mainScene.InintTTsTest);
             AddControlButton("TTS Start", "button_avatar", mainScene.StartTTSTest);
+            AddControlButton("TTS Async", "button_avatar", mainScene.StartTTSAsyncTest);
             AddControlButton("TTS to the Response", "button_avatar", mainScene.StartLLMTest);
             AddControlButton("TTS Stop", "button_avatar", mainScene.StopTTSTest);
             AddControlButton("CZ", "button_avatar", mainScene.StartAvatarTalk_1);

@@ -28,7 +28,6 @@ namespace Tizen.AIAvatar
         private Animation lipAnimation = null;
 
         private VowelConverter vowelConverter;
-        private AudioPlayer audioPlayer;
         private event Func<AnimationKeyFrame, bool, Animation> TheEvent;
 
         internal Func<AnimationKeyFrame, bool, Animation> CreatedKeyFrameAnimation;
@@ -40,17 +39,15 @@ namespace Tizen.AIAvatar
         internal LipSyncer()
         {
             vowelConverter = new VowelConverter();
-            audioPlayer = new AudioPlayer();
         }
 
-        internal AudioPlayer AudioPlayer { get { return audioPlayer; } }
 
         public void SetLipAnimation(Animation lipAnimation)
         {
             this.lipAnimation = lipAnimation;
         }
 
-        public void PlayAudio(byte[] audio, int sampleRate)
+        public void Play(byte[] audio, int sampleRate)
         {
             if (audio != null)
             {
@@ -115,7 +112,6 @@ namespace Tizen.AIAvatar
                 {
                     ResetLipAnimation(lipAnimation);
                     PlayLipAnimation();
-                    audioPlayer.Play(audio);
                 }
                 else
                 {
@@ -138,7 +134,7 @@ namespace Tizen.AIAvatar
                 ResetLipAnimation(lipAnimation);
                 PlayLipAnimation();
             }
-            audioPlayer.Play(audio, sampleRate);
+            
         }
 
         private void PlayLipSync(string path)
@@ -157,7 +153,6 @@ namespace Tizen.AIAvatar
         private void PauseLipSync()
         {
             PauseLipAnimation();
-            audioPlayer.Pause();
         }
 
         private void StopLipSync()
@@ -181,7 +176,7 @@ namespace Tizen.AIAvatar
             {
                 Log.Error(LogTag, "Current Lip Animation is null");
             }
-            audioPlayer.Stop();
+
         }
 
         private void PauseLipAnimation()
@@ -280,18 +275,25 @@ namespace Tizen.AIAvatar
             EnqueueVowels(recordBuffer);
         }
 
-        internal void OnRecodingTick()
+        internal bool AnimateQueueHasValues()
         {
             var lipAnimation = CreateLipAnimationByVowelsQueue();
             if (lipAnimation != null)
             {
                 ResetLipAnimation(lipAnimation);
                 PlayLipAnimation();
+                return true;
             }
             else
             {
                 Log.Error(LogTag, "Current Lip Animation is null");
+                return false;
             }
+        }
+
+        internal void OnTick()
+        {
+            AnimateQueueHasValues();
         }
     }
 }
