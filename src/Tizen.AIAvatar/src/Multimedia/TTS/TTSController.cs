@@ -404,6 +404,7 @@ namespace Tizen.AIAvatar
 
                         audioMainBuffer = new byte[desiredBufferLength];
 
+                        PlayReadyCallback?.Invoke(null, EventArgs.Empty);
                         AsyncReadyCallback?.Invoke(null, EventArgs.Empty);
                     }
                     break;
