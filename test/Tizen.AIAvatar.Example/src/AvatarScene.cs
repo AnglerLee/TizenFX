@@ -31,6 +31,8 @@ namespace AIAvatar
         private const int cameraAnimationDurationMilliSeconds = 2000;
         private const int sceneTransitionDurationMilliSeconds = 1500;
 
+        private Avatar defaultAIAvatar;
+        
         private bool isBlink = false;
         private bool isShowing = true;
 
@@ -181,13 +183,20 @@ namespace AIAvatar
         }
 
         private void SetupDefaultAvatar()
-        {            
-         
+        { 
+            CreateAvatar();
         }
 
         private void CreateAvatar()
         {
-           
+            defaultAIAvatar = new Avatar(resourcePath + "/model/model_external.gltf")
+            {
+                Position = new Position(0.0f, -1.70f, -2.0f),
+                Size = new Size(1.0f, 1.0f, 1.0f),
+                Orientation = new Rotation(new Radian(new Degree(0.0f)), Vector3.YAxis)
+            };
+
+            Add(defaultAIAvatar);
         }
 
         private void DestroyAvatar()

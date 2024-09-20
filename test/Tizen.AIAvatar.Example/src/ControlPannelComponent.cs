@@ -77,7 +77,7 @@ namespace AIAvatar
             MakeControlPannelComponents();
         }
 
-        public void ReizeUIPanel(View avatarScene, View circleView)
+        public void ReizeUIPanel(View avatarScene)
         {
             var windowSize = uiWindow.Size;
             var layoutLTR = (windowSize.Width >= windowSize.Height);
@@ -104,17 +104,12 @@ namespace AIAvatar
             }
 
             // Update SceneView and ControlPannel size/position if we has.
-            if (avatarScene != null && circleView != null)
+            if (avatarScene != null)
             {
                 avatarScene.SizeWidth = sceneViewSize.Width;
                 avatarScene.SizeHeight = sceneViewSize.Height;
-                avatarScene.PositionX = 0;//sceneViewPosition.X;
-                avatarScene.PositionY = 0;//sceneViewPosition.Y;
-
-                circleView.SizeWidth = sceneViewSize.Width;
-                circleView.SizeHeight = sceneViewSize.Width;
-                circleView.PositionX = sceneViewPosition.X;
-                circleView.PositionY = sceneViewPosition.Y;
+                avatarScene.PositionX = sceneViewPosition.X;
+                avatarScene.PositionY = sceneViewPosition.Y;
             }
 
             if (controlPannel != null)

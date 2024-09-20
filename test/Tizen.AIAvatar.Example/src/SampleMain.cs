@@ -16,22 +16,16 @@
  */
 
 using System;
-using Tizen.AIAvatar;
 using Tizen.NUI;
 using Tizen.NUI.BaseComponents;
-using Tizen.Security;
 
-using Tizen;
-using Tizen.Multimedia;
 
 namespace AIAvatar
 {
     partial class Program : NUIApplication
     {
         private Window window;
-        private Tizen.NUI.Size windowSize;
         private AvatarScene avatarScene;
-        private View circleMaskView;
 
         private UIControlPanel uiControlPanel;
 
@@ -87,8 +81,9 @@ namespace AIAvatar
 
         private void MakeAvatarScene()
         {
-            avatarScene = new AvatarScene();
+            avatarScene = new AvatarScene();           
             window.Add(avatarScene);
+            
         }
 
         private void MakeUIPanel()
@@ -105,7 +100,7 @@ namespace AIAvatar
 
         private void RecalculatePositionSizeFromWindowSize()
         {
-            uiControlPanel.ReizeUIPanel(avatarScene, circleMaskView);
+            uiControlPanel.ReizeUIPanel(avatarScene);
         }
 
         private void OnKeyEvent(object sender, Window.KeyEventArgs e)
