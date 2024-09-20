@@ -231,13 +231,9 @@ namespace AIAvatar
             AddControlButton("ChangeAvatar", "button_avatar", mainScene.ChangeAvatar);
             AddControlButton("Random Animation", "button_bvh", mainScene.StartRandomAnimation);
             AddControlButton("EyeBlink", "button_bvh", mainScene.EyeBlink);
-
             AddControlButton("TTS Init", "button_avatar", mainScene.InintTTsTest);
             AddControlButton("TTS Start", "button_avatar", mainScene.StartTTSTest);
             AddControlButton("TTS Stop", "button_avatar", mainScene.StopTTSTest);
-            AddControlButton("CZ", "button_avatar", mainScene.StartAvatarTalk_1);
-            AddControlButton("DK", "button_avatar", mainScene.StartAvatarTalk_2);
-            AddControlButton("GR", "button_avatar", mainScene.StartAvatarTalk_3);
             AddControlButton("Start Mic", "button_bvh", mainScene.StartMic);
             AddControlButton("Stop Mic", "button_bvh", mainScene.StopMic);
             AddControlButton("Show/Hide", "button_bvh", mainScene.ShowHide);

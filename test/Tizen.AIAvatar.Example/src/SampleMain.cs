@@ -42,9 +42,7 @@ namespace AIAvatar
         }
 
         private void Initialize()
-        {
-            //var asyncAudioCapture = new AsyncAudioCapture(24000, AudioChannel.Mono, AudioSampleType.S16Le);
-
+        {         
             window = NUIApplication.GetDefaultWindow();
             window.BackgroundColor = new Color(0.85f, 0.85f, 0.85f, 1.0f); ;
 
@@ -90,24 +88,7 @@ namespace AIAvatar
         private void MakeAvatarScene()
         {
             avatarScene = new AvatarScene();
-            avatarScene.UseFramebuffer = true;
-
-            avatarScene.SetAlphaMaskUrl(Tizen.Applications.Application.Current.DirectoryInfo.Resource + "images/contact-cards-mask.png");
-            avatarScene.EnableCropToMask(false);
-            //window.Add(avatarScene);
-            
-            circleMaskView = new View()
-            {
-                Size = new Tizen.NUI.Size(),
-                Position = new Position(0, 0),
-                BackgroundColor = new Tizen.NUI.Color(0.0f, 0.0f, 0.0f, 0.0f),//new Tizen.NUI.Color("#221F1F"),
-            };
-            window.Add(circleMaskView);
-            circleMaskView.Add(avatarScene);
-
-            //circleMaskView.ClippingMode = ClippingModeType.ClipChildren;
-            //circleMaskView.CornerRadius = new Vector4(0.5f,0.5f,0.5f,0.5f);
-            circleMaskView.CornerRadiusPolicy = VisualTransformPolicyType.Relative;
+            window.Add(avatarScene);
         }
 
         private void MakeUIPanel()
