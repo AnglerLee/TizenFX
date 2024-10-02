@@ -18,6 +18,8 @@
 using System.ComponentModel;
 using Tizen.NUI.Scene3D;
 using Tizen.NUI;
+using System;
+using System.Diagnostics;
 
 
 namespace Tizen.AIAvatar
@@ -31,8 +33,13 @@ namespace Tizen.AIAvatar
     public class Avatar : Model
     {
         private AvatarProperties avatarProperties = new EmojiAvatarProperties();
+                
+        private SerialAnimator bodyAnimator = new SerialAnimator();
+        private ParallelAnimator faceAnimator = new ParallelAnimator();
 
-        private MotionPlayer motionPlayer;
+        private EyeBlinkMotionData eyeBlinkMotionData;
+
+        
 
         /// <summary>  
         /// The AvatarProperties property gets or sets the AvatarProperties object containing various information about the Avatar.  
@@ -56,6 +63,7 @@ namespace Tizen.AIAvatar
             InitAvatar();
         }
 
+        /// <summary>
         /// Create an initialized Avatar.
         /// </summary>
         /// <param name="avatarUrl">avatar file url.(e.g. glTF).</param>
@@ -92,7 +100,7 @@ namespace Tizen.AIAvatar
         /// <param name="isLooping">A boolean indicating whether the animation should be looped or not.</param>  
         /// <param name="loopCount">The number of times to repeat the animation if it's set to loop.</param>  
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public void PlayAnimation(AnimationInfo animationInfo, int duration = 3000, bool isLooping = false, int loopCount = 1)
+        public void PlayAnimation(MotionInfo animationInfo, int duration = 3000, bool isLooping = false, int loopCount = 1)
         {
             if (animationInfo == null)
             {
@@ -104,22 +112,20 @@ namespace Tizen.AIAvatar
                 Tizen.Log.Error("Tizen.AIAvatar", "animationInfo.MotionData is null");
                 return;
             }
-            motionAnimation = GenerateMotionDataAnimation(animationInfo.MotionData);
+            var motionAnimation = GenerateMotionDataAnimation(animationInfo.MotionData);
             if (motionAnimation != null)
             {
                 motionAnimation.Duration = duration;
                 motionAnimation.Looping = isLooping;
                 motionAnimation.LoopCount = loopCount;
                 motionAnimation.BlendPoint = 0.2f;
-                motionPlayer.PlayAnimation(motionAnimation);
+                //motionPlayer.PlayAnimation(motionAnimation);
             }
             else
             {
                 Tizen.Log.Error("Tizen.AIAvatar", "motionAnimation is null");
             }
-        }
-
-        Animation motionAnimation;
+        }       
 
         /// <summary>  
         /// Plays the specified avatar animation with MotionData and an optional duration and loop count.  
@@ -144,7 +150,7 @@ namespace Tizen.AIAvatar
                 motionAnimation.Looping = isLooping;
                 motionAnimation.LoopCount = loopCount;
                 motionAnimation.BlendPoint = 0.2f;
-                motionPlayer.PlayAnimation(motionAnimation);
+                //motionPlayer.PlayAnimation(motionAnimation);
             }
             else
             {
@@ -178,7 +184,7 @@ namespace Tizen.AIAvatar
         [EditorBrowsable(EditorBrowsableState.Never)]
         public void PauseMotionAnimation()
         {
-            motionPlayer.PauseMotionAnimation();
+            //motionPlayer.PauseMotionAnimation();
         }
 
         /// <summary>  
@@ -187,7 +193,7 @@ namespace Tizen.AIAvatar
         [EditorBrowsable(EditorBrowsableState.Never)]
         public void StopMotionAnimation()
         {
-            motionPlayer?.StopMotionAnimation();
+            //motionPlayer?.StopMotionAnimation();
         }
 
         /// <summary>  
@@ -196,16 +202,26 @@ namespace Tizen.AIAvatar
         [EditorBrowsable(EditorBrowsableState.Never)]
         public void StartEyeBlink()
         {
-            motionPlayer?.StartEyeBlink();
-        }
+            try
+            {
+                faceAnimator.Play();
+            }
+            catch (Exception ex)
+            {
+                Log.Error("Tizen.AIAvatar", "An error occurred while Play the eye blink: " + ex.Message);
+            }
+            //motionPlayer?.StartEyeBlink();
 
+        }
+        
         /// <summary>  
-        /// Pauses the eye blink animation for the current avatar.  
-        /// </summary>  
+         /// Pauses the eye blink animation for the current avatar.  
+         /// </summary>  
         [EditorBrowsable(EditorBrowsableState.Never)]
         public void PauseEyeBlink()
         {
-            motionPlayer?.PauseEyeBlink();
+            faceAnimator.Pause();
+            //motionPlayer?.PauseEyeBlink();
         }
 
         /// <summary>  
@@ -214,48 +230,58 @@ namespace Tizen.AIAvatar
         [EditorBrowsable(EditorBrowsableState.Never)]
         public void StopEyeBlink()
         {
-            motionPlayer?.StopEyeBlink();
+            faceAnimator.Stop();
+            //motionPlayer?.StopEyeBlink();
         }
         #endregion
-        
+
+
+        /// <summary>  
+        /// Dispose
+        /// </summary>  
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        protected override void Dispose(DisposeTypes type)
+        {
+            if (Disposed)
+            {
+                return;
+            }
+
+            if (type == DisposeTypes.Explicit)
+            {
+                Log.Error("Tizen.AIAvatar", "Dispose");
+                bodyAnimator?.Dispose();
+                faceAnimator?.Dispose();
+                eyeBlinkMotionData?.Dispose();
+            }
+
+            base.Dispose(type);
+        }
+
+
         private void InitAvatar()
         {
-            motionPlayer = new MotionPlayer();
-            var eyeMotionData = CreateEyeBlinkMotionData(200);
-            if (eyeMotionData == null)
-            {
-                Tizen.Log.Info("Tizen.AIAvatar", "Failed Loading eyeAnimation");
-            }
+            Log.Error("Tizen.AIAvatar", "InitAvatar");
+
+          
+            eyeBlinkMotionData = new EyeBlinkMotionData();
+            eyeBlinkMotionData.Initialize(avatarProperties);
 
             ResourcesLoaded += (s, e) =>
             {
-                var eyeAnimation = GenerateMotionDataAnimation(eyeMotionData);
+                var eyeAnimation = GenerateMotionDataAnimation(eyeBlinkMotionData.GetMotionData(4000));
+                eyeAnimation.Looping = true;
+                
                 if (eyeAnimation != null)
                 {
-                    motionPlayer.SetBlinkAnimation(eyeAnimation);
+                    faceAnimator.Add(eyeAnimation);
                 }
             };
+
         }
 
-        private MotionData CreateEyeBlinkMotionData(int ms)
-        {
-            var keyFrames = new KeyFrames();
-            keyFrames.Add(0.1f, 0.0f);
-            keyFrames.Add(0.5f, 1.0f);
-            keyFrames.Add(0.9f, 0.0f);
+        
 
-            var headBlendShapeEyeLeft = new AvatarBlendShapeIndex(avatarProperties.NodeMapper, NodeType.HeadGeo, avatarProperties.BlendShapeMapper, BlendShapeType.EyeBlinkLeft);
-            var headBlendShapeEyeRight = new AvatarBlendShapeIndex(avatarProperties.NodeMapper, NodeType.HeadGeo, avatarProperties.BlendShapeMapper, BlendShapeType.EyeBlinkRight);
-            var eyelashBlendShapeEyeLeft = new AvatarBlendShapeIndex(avatarProperties.NodeMapper, NodeType.EyelashGeo, avatarProperties.BlendShapeMapper, BlendShapeType.EyeBlinkLeft);
-            var eyelashBlendShapeEyeRight = new AvatarBlendShapeIndex(avatarProperties.NodeMapper, NodeType.EyelashGeo, avatarProperties.BlendShapeMapper, BlendShapeType.EyeBlinkRight);
-
-            var motionData = new MotionData(ms);
-            motionData.Add(headBlendShapeEyeLeft, new MotionValue(keyFrames));
-            motionData.Add(headBlendShapeEyeRight, new MotionValue(keyFrames));
-            motionData.Add(eyelashBlendShapeEyeLeft, new MotionValue(keyFrames));
-            motionData.Add(eyelashBlendShapeEyeRight, new MotionValue(keyFrames));
-
-            return motionData;
-        }
+       
     }
 }

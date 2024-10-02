@@ -26,7 +26,7 @@ namespace Tizen.AIAvatar
     /// <member name = "Current" > The current state of the avatar's motion.</member>  
     /// </summary>  
     [EditorBrowsable(EditorBrowsableState.Never)]
-    public class AvatarMotionChangedEventArgs : EventArgs
+    public class AnimatorChangedEventArgs : EventArgs
     {
         /// <summary>  
         /// Initializes a new instance of the AvatarMotionChangedEventArgs class with the specified previous and current states.  
@@ -34,7 +34,7 @@ namespace Tizen.AIAvatar
         /// <param name="previous">The previous state of the avatar's motion.</param>  
         /// <param name="current">The current state of the avatar's motion.</param>  
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public AvatarMotionChangedEventArgs(AvatarMotionState previous, AvatarMotionState current)
+        public AnimatorChangedEventArgs(AnimatorState previous, AnimatorState current)
         {
             Previous = previous;
             Current = current;
@@ -44,7 +44,7 @@ namespace Tizen.AIAvatar
         /// The previous state.
         /// </summary>
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public AvatarMotionState Previous
+        public AnimatorState Previous
         {
             get;
             internal set;
@@ -54,7 +54,7 @@ namespace Tizen.AIAvatar
         /// The current state.
         /// </summary>
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public AvatarMotionState Current
+        public AnimatorState Current
         {
             get;
             internal set;

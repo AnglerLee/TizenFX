@@ -23,7 +23,7 @@ namespace Tizen.AIAvatar
     /// Enumeration for the states.
     /// </summary>
     [EditorBrowsable(EditorBrowsableState.Never)]
-    public enum AvatarMotionState
+    public enum AnimatorState
     {
         /// <summary>
         ///  Created state.

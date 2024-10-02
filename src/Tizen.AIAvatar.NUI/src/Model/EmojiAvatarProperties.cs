@@ -50,17 +50,7 @@ namespace Tizen.AIAvatar
 
         }
 
-        /// <summary>  
-        /// This method generates a MotionIndex to be used in animations based on the NodeType and BlendShapeType using the model information of an Avatar.  
-        /// </summary>  
-        /// <param name="nodeType">Node type</param>  
-        /// <param name="blendShapeType">Blend shape type</param>  
-        /// <returns>The generated MotionIndex</returns>  
-        public MotionIndex CreateBlendShapeMotionIndex(NodeType nodeType, BlendShapeType blendShapeType)
-        {
-            var motionIndex = new AvatarBlendShapeIndex(NodeMapper, nodeType, BlendShapeMapper, blendShapeType);
-            return motionIndex;
-        }
+
 
         #region AR Emoji BlendShape name list
         private static readonly List<(BlendShapeType, string)> blendShapeList = new List<(BlendShapeType, string)>()

@@ -17,6 +17,7 @@
 
 using System;
 using System.ComponentModel;
+using Tizen.NUI.Scene3D;
 
 namespace Tizen.AIAvatar
 {
@@ -28,7 +29,7 @@ namespace Tizen.AIAvatar
     /// This structure enables users to work with Avatar properties in a more convenient way.
     /// </summary>
     [EditorBrowsable(EditorBrowsableState.Never)]
-    public class AvatarProperties
+    public abstract class AvatarProperties
     {
         private AvatarPropertyMapper jointMapper;
         private AvatarPropertyMapper blendShapeMapper;
@@ -103,6 +104,18 @@ namespace Tizen.AIAvatar
             JointMapper = new AvatarPropertyMapper(jointMapper);
             BlendShapeMapper = new AvatarPropertyMapper(blendShapeMapper);
             NodeMapper = new AvatarPropertyMapper(nodeMapper);
+        }
+
+        /// <summary>  
+        /// This method generates a MotionIndex to be used in animations based on the NodeType and BlendShapeType using the model information of an Avatar.  
+        /// </summary>  
+        /// <param name="nodeType">Node type</param>  
+        /// <param name="blendShapeType">Blend shape type</param>  
+        /// <returns>The generated MotionIndex</returns>  
+        public MotionIndex CreateBlendShapeMotionIndex(NodeType nodeType, BlendShapeType blendShapeType)
+        {
+            var motionIndex = new AvatarBlendShapeIndex(NodeMapper, nodeType, BlendShapeMapper, blendShapeType);
+            return motionIndex;
         }
     }
 }

@@ -24,7 +24,7 @@ namespace Tizen.AIAvatar
     /// The AnimationInfo class manages animation data for an Avatar, including motion data and names. It is not meant to be directly edited by users or editors.  
     /// </summary>  
     [EditorBrowsable(EditorBrowsableState.Never)]
-    public class AnimationInfo
+    public class MotionInfo
     {
         /// <summary>  
         /// Gets the motion data associated with this animation.  
@@ -44,7 +44,7 @@ namespace Tizen.AIAvatar
         /// <param name="motionData">TheThe motion data associated with this animation.</param>
         /// <param name="motionName">The name of this animation.</param>
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public AnimationInfo(MotionData motionData, string motionName)
+        public MotionInfo(MotionData motionData, string motionName)
         {
             MotionData = motionData;
             MotionName = motionName;

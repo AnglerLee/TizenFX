@@ -12,24 +12,15 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
-using Tizen.NUI;
+using Tizen.NUI.Scene3D;
 
 namespace Tizen.AIAvatar
 {
-    internal interface IBlendShapeModule
+    internal interface ICustomMotionData
     {
-        public void Init(Animation animation);
-
-        public void Play();
-
-        public void Stop();
-
-        public void Pause();
-
-        public void Destroy();
+        public void Initialize(AvatarProperties avatarProperties);
+        public MotionData GetMotionData(int durationMilliseconds);
     }
-
 }

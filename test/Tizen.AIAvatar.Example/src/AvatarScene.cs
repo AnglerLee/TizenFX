@@ -38,6 +38,11 @@ namespace AIAvatar
 
         private float iblFactor = 0.3f;
 
+        public Avatar AIAvatar
+        {
+            get => defaultAIAvatar;
+        }
+
         public float IBLFactor
         {
             get
@@ -150,7 +155,8 @@ namespace AIAvatar
 
         public void ChangeAvatar()
         {
-           
+            DestroyAvatar();
+            CreateAvatar();
 
         }
 
@@ -201,53 +207,52 @@ namespace AIAvatar
 
         private void DestroyAvatar()
         {
-          
-
+            defaultAIAvatar.Dispose();
         }
 
-        private void OnMotionStateChanged(object sender, AvatarMotionChangedEventArgs e)
+        private void OnMotionStateChanged(object sender, AnimatorChangedEventArgs e)
         {
             var avatar = sender as Avatar;//Avatar changed state
 
             switch (e.Current)
             {
-                case AvatarMotionState.Ready:
+                case AnimatorState.Ready:
                     Tizen.Log.Error(Utils.LogTag, "Current Avatar State is Ready");
                     break;
 
-                case AvatarMotionState.Playing:
+                case AnimatorState.Playing:
                     Tizen.Log.Error(Utils.LogTag, "Current Avatar State is Playing");
                     break;
 
-                case AvatarMotionState.Paused:
+                case AnimatorState.Paused:
                     Tizen.Log.Error(Utils.LogTag, "Current Avatar State is Paused");
                     break;
 
-                case AvatarMotionState.Stopped:
+                case AnimatorState.Stopped:
                     Tizen.Log.Error(Utils.LogTag, "Current Avatar State is Stopped");
                     break;
             }
         }
 
-        private void OnLipStateChanged(object sender, AvatarMotionChangedEventArgs e)
+        private void OnLipStateChanged(object sender, AnimatorChangedEventArgs e)
         {
             var avatar = sender as Avatar;//Avatar changed state
 
             switch (e.Current)
             {
-                case AvatarMotionState.Ready:
+                case AnimatorState.Ready:
                     Tizen.Log.Error(Utils.LogTag, "Current Avatar Lip is Ready");
                     break;
 
-                case AvatarMotionState.Playing:
+                case AnimatorState.Playing:
                     Tizen.Log.Error(Utils.LogTag, "Current Avatar Lip is Playing");
                     break;
 
-                case AvatarMotionState.Paused:
+                case AnimatorState.Paused:
                     Tizen.Log.Error(Utils.LogTag, "Current Avatar Lip is Paused");
                     break;
 
-                case AvatarMotionState.Stopped:
+                case AnimatorState.Stopped:
                     Tizen.Log.Error(Utils.LogTag, "Current Avatar Lip is Stopped");
                     break;
             }
