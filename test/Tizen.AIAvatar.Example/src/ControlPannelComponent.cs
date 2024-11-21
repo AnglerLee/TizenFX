@@ -77,7 +77,7 @@ namespace AIAvatar
             MakeControlPannelComponents();
         }
 
-        public void ReizeUIPanel(View avatarScene, View circleView)
+        public void ReizeUIPanel(View avatarScene)
         {
             var windowSize = uiWindow.Size;
             var layoutLTR = (windowSize.Width >= windowSize.Height);
@@ -104,17 +104,12 @@ namespace AIAvatar
             }
 
             // Update SceneView and ControlPannel size/position if we has.
-            if (avatarScene != null && circleView != null)
+            if (avatarScene != null)
             {
                 avatarScene.SizeWidth = sceneViewSize.Width;
                 avatarScene.SizeHeight = sceneViewSize.Height;
-                avatarScene.PositionX = 0;//sceneViewPosition.X;
-                avatarScene.PositionY = 0;//sceneViewPosition.Y;
-
-                circleView.SizeWidth = sceneViewSize.Width;
-                circleView.SizeHeight = sceneViewSize.Width;
-                circleView.PositionX = sceneViewPosition.X;
-                circleView.PositionY = sceneViewPosition.Y;
+                avatarScene.PositionX = sceneViewPosition.X;
+                avatarScene.PositionY = sceneViewPosition.Y;
             }
 
             if (controlPannel != null)
@@ -229,17 +224,18 @@ namespace AIAvatar
         {
             AddControlEditor();
             AddControlButton("ChangeAvatar", "button_avatar", mainScene.ChangeAvatar);
-            AddControlButton("Random Animation", "button_bvh", mainScene.StartRandomAnimation);
-            AddControlButton("EyeBlink", "button_bvh", mainScene.EyeBlink);
-
+            AddControlButton("Random Animation", "button_bvh", mainScene.AIAvatar.PlayRandomBodyAnimation);
+            AddControlButton("Random Face Animations", "button_bvh", mainScene.AIAvatar.PlayMultipleFacialAnimations);
+            AddControlButton("Play LipSync", "button_bvh", mainScene.AIAvatar.PlayLipSync);
+            AddControlButton("Streaming LipSync", "button_bvh", mainScene.AIAvatar.PlayStreamingLipSync);
+            AddControlButton("Play Audio_Lip", "button_bvh", mainScene.AIAvatar.PlayAudioLipSync);
+            AddControlButton("Play Audio_Lip_Stream", "button_bvh", mainScene.AIAvatar.PlayAudioLipSyncStream);
+            AddControlButton("Pause", "button_bvh", mainScene.AIAvatar.PauseAnimations);
+            AddControlButton("Stop", "button_bvh", mainScene.AIAvatar.StopAnimations);
+            AddControlButton("EyeBlink", "button_bvh", mainScene.AIAvatar.StartEyeBlink);
             AddControlButton("TTS Init", "button_avatar", mainScene.InintTTsTest);
             AddControlButton("TTS Start", "button_avatar", mainScene.StartTTSTest);
             AddControlButton("TTS Stop", "button_avatar", mainScene.StopTTSTest);
-            AddControlButton("CZ", "button_avatar", mainScene.StartAvatarTalk_1);
-            AddControlButton("DK", "button_avatar", mainScene.StartAvatarTalk_2);
-            AddControlButton("GR", "button_avatar", mainScene.StartAvatarTalk_3);
-            AddControlButton("Start Mic", "button_bvh", mainScene.StartMic);
-            AddControlButton("Stop Mic", "button_bvh", mainScene.StopMic);
             AddControlButton("Show/Hide", "button_bvh", mainScene.ShowHide);
             AddControlSlider("Camera FOV", "slider_camera_fov", 0.1f, 1.3f, mainScene.GetSelectedCamera().FieldOfView.ConvertToFloat(), mainScene.SetupSceneViewCameraFov);
             AddControlSlider("IBL intensity", "slider_ibl_factor", 0.1f, 0.8f, mainScene.IBLFactor, mainScene.SetupSceneViewIBLFactor);

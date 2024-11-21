@@ -1,0 +1,9 @@
+{
+  "profiles": {
+    "Tizen.AIAvatar.Sample": {
+      "commandName": "Project",
+      "hotReloadEnabled": false,
+      "nativeDebugging": true
+    }
+  }
+}

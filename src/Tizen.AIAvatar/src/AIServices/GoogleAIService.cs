@@ -1,0 +1,341 @@
+﻿/*
+ * Copyright(c) 2024 Samsung Electronics Co., Ltd.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
+
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Text.Json;
+using System.Threading.Tasks;
+
+namespace Tizen.AIAvatar
+{
+    public class GoogleAIConfiguration : AIServiceConfiguration
+    {       
+        public GoogleAIConfiguration()
+        {
+            Endpoints = new ServiceEndpoints
+            {
+                LLMEndpoint = "https://generativelanguage.googleapis.com/v1beta/models/",
+                TextToSpeechEndpoint = "https://texttospeech.googleapis.com",
+                SpeechToTextEndpoint = "https://speech.googleapis.com"
+            };
+        }
+
+        public string OAuth2Token { get; set; }  // API 키 대신 OAuth2 토큰 사용
+        public string Model { get; set; } = "gemini-1.5-flash"; // 기본 모델을 1.5-flash로 변경
+    }
+
+    public class GoogleAIService : BaseAIService, ITextToSpeechService, ISpeechToTextService, ILLMService
+    {
+        private readonly GoogleAIConfiguration config;
+
+        public event EventHandler<TtsStreamingEventArgs> OnTtsStart;
+        public event EventHandler<TtsStreamingEventArgs> OnTtsReceiving;
+        public event EventHandler<TtsStreamingEventArgs> OnTtsFinish;
+
+
+        public event EventHandler<SttStreamingEventArgs> OnSttStart;
+        public event EventHandler<SttStreamingEventArgs> OnSttReceiving;
+        public event EventHandler<SttStreamingEventArgs> OnSttFinish;
+
+        public override string ServiceName => "GoogleAI";
+        public override ServiceCapabilities Capabilities =>
+            ServiceCapabilities.TextToSpeech |
+            ServiceCapabilities.SpeechToText |
+            ServiceCapabilities.LargeLanguageModel;
+
+        
+
+        public GoogleAIService(GoogleAIConfiguration config) : base(config)
+        {
+            this.config = config;
+        }
+
+        public async Task<string> GenerateTextAsync(string prompt, Dictionary<string, object> options = null)
+        {
+            // API 키가 포함된 전체 URL을 baseUrl로 사용
+            var fullUrl = $"{config.Endpoints.LLMEndpoint}{config.Model}:generateContent?key={config.ApiKey}";
+            var client = ClientManager.GetClient(fullUrl);
+
+            var request = new RestRequest(Method.Post)
+                .AddHeader("Content-Type", "application/json")
+                .AddJsonBody(new
+                {
+                    contents = new[]
+                    {
+                    new
+                    {
+                        role = "user",
+                        parts = new[]
+                        {
+                            new { text = prompt }
+                        }
+                    }
+                    },
+                    generationConfig = new
+                    {
+                        temperature = options?.GetValueOrDefault("temperature", 1.0),
+                        maxOutputTokens = options?.GetValueOrDefault("maxOutputTokens", 8192),
+                        topP = options?.GetValueOrDefault("topP", 0.95),
+                        topK = options?.GetValueOrDefault("topK", 40),
+                        responseMimeType = "text/plain"
+                    }
+                });
+
+            var response = await client.ExecuteAsync(request);
+            if (!response.IsSuccessful)
+                throw new Exception($"Google AI API Error: {response.ErrorMessage}");
+
+            var jsonResponse = JsonSerializer.Deserialize<JsonElement>(response.Content);
+            return jsonResponse
+                .GetProperty("candidates")[0]
+                .GetProperty("content")
+                .GetProperty("parts")[0]
+                .GetProperty("text")
+                .GetString();
+        }
+
+   
+        public async Task<string> SpeechToTextAsync(
+            byte[] audioData,
+            Dictionary<string, object> options = null)
+        {
+            var client = ClientManager.GetClient(config.Endpoints.SpeechToTextEndpoint);
+
+            var request = new RestRequest("/v1/speech:recognize", Method.Post)
+                .AddHeader("Authorization", $"Bearer {config.OAuth2Token}")
+                .AddJsonBody(new
+                {
+                    config = new
+                    {
+                        encoding = options?.GetValueOrDefault("encoding", "LINEAR16"),
+                        sampleRateHertz = options?.GetValueOrDefault("sampleRate", 24000),
+                        languageCode = options?.GetValueOrDefault("languageCode", "en-US"),
+                        model = options?.GetValueOrDefault("model", "default"),
+                        enableAutomaticPunctuation = options?.GetValueOrDefault("enablePunctuation", true)
+                    },
+                    audio = new
+                    {
+                        content = Convert.ToBase64String(audioData)
+                    }
+                });
+
+            var response = await client.ExecuteAsync(request);
+            if (!response.IsSuccessful)
+                throw new Exception($"Google STT Error: {response.ErrorMessage}");
+
+            var jsonResponse = JsonSerializer.Deserialize<JsonElement>(response.Content);
+            return jsonResponse
+                .GetProperty("results")[0]
+                .GetProperty("alternatives")[0]
+                .GetProperty("transcript")
+                .GetString();
+        }
+
+        public async Task StreamSpeechToTextAsync(
+            Stream audioStream,
+            Dictionary<string, object> options = null)
+        {
+            const int CHUNK_SIZE = 1024 * 8; // 8KB chunks for audio processing
+            var buffer = new byte[CHUNK_SIZE];
+
+            try
+            {
+                OnSttStart?.Invoke(this, new SttStreamingEventArgs
+                {
+                    Interim = false,
+                    Text = string.Empty
+                });
+
+                var ms = new MemoryStream();
+                int bytesRead;
+                int totalBytesRead = 0;
+
+                // Read audio stream in chunks
+                while ((bytesRead = await audioStream.ReadAsync(buffer, 0, buffer.Length)) > 0)
+                {
+                    await ms.WriteAsync(buffer, 0, bytesRead);
+                    totalBytesRead += bytesRead;
+
+                    // Process intermediate results every 64KB
+                    if (totalBytesRead >= 1024 * 64)
+                    {
+                        var intermediateAudio = ms.ToArray();
+                        var intermediateText = await SpeechToTextAsync(intermediateAudio, options);
+
+                        OnSttReceiving?.Invoke(this, new SttStreamingEventArgs
+                        {
+                            Interim = true,
+                            Text = intermediateText
+                        });
+
+                        ms = new MemoryStream(); // Reset for next chunk
+                        totalBytesRead = 0;
+                    }
+                }
+
+                // Process final chunk if any remains
+                if (totalBytesRead > 0)
+                {
+                    var finalAudio = ms.ToArray();
+                    var finalText = await SpeechToTextAsync(finalAudio, options);
+
+                    OnSttFinish?.Invoke(this, new SttStreamingEventArgs
+                    {
+                        Interim = false,
+                        Text = finalText
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                OnSttFinish?.Invoke(this, new SttStreamingEventArgs
+                {
+                    Error = ex.Message,
+                    Text = string.Empty
+                });
+                throw;
+            }
+            finally
+            {
+                audioStream.Dispose();
+            }
+        }
+
+        public async Task<byte[]> TextToSpeechAsync(string text, string voice = null, Dictionary<string, object> options = null)
+        {
+            var client = ClientManager.GetClient(config.Endpoints.TextToSpeechEndpoint);
+            var request = new RestRequest("/v1/text:synthesize", Method.Post) // 경로 수정
+            .AddHeader("Authorization", $"Bearer {config.OAuth2Token}")
+            .AddHeader("Content-Type", "application/json; charset=utf-8")
+            .AddJsonBody(new
+            {
+                input = new { text = text },
+                voice = new
+                {
+                    languageCode = options?.GetValueOrDefault("languageCode", "en-US") ?? "en-US",
+                    name = voice ?? "en-US-Standard-A"
+                },
+                audioConfig = new
+                {
+                    audioEncoding = options?.GetValueOrDefault("audioEncoding", "MP3") ?? "MP3",
+                    sampleRateHertz = options?.GetValueOrDefault("sampleRateHertz", 24000) ?? 24000
+                }
+            });
+
+            var response = await client.ExecuteAsync(request);
+            if (!response.IsSuccessful)
+                throw new Exception($"Google TTS Error: {response.ErrorMessage}");
+
+            var jsonResponse = JsonSerializer.Deserialize<JsonElement>(response.Content);
+            var audioContent = jsonResponse.GetProperty("audioContent").GetString();
+            return Convert.FromBase64String(audioContent);
+        }
+
+        public async Task TextToSpeechStreamAsync(string text, string voice = null, Dictionary<string, object> options = null)
+        {
+            const int SAMPLE_RATE = 24000;  
+            const int FRAME_DURATION_MS = 160;  // 160ms 단위로 분할
+            const int BYTES_PER_SAMPLE = 2;  // 16-bit PCM
+            const int CHUNK_SIZE = (SAMPLE_RATE * FRAME_DURATION_MS * BYTES_PER_SAMPLE) / 1000;  // 160ms worth of PCM data
+
+            var client = ClientManager.GetClient(config.Endpoints.TextToSpeechEndpoint);
+            var request = new RestRequest("/v1/text:synthesize", Method.Post) // 경로 수정
+            .AddHeader("Authorization", $"Bearer {config.OAuth2Token}")
+            .AddHeader("Content-Type", "application/json; charset=utf-8")
+            .AddJsonBody(new
+            {
+                input = new { text = text },
+                voice = new
+                {
+                    languageCode = options?.GetValueOrDefault("languageCode", "en-US") ?? "en-US",
+                    name = voice ?? "en-US-Standard-A"
+                },
+                audioConfig = new
+                {
+                    audioEncoding = options?.GetValueOrDefault("audioEncoding", "LINEAR16") ?? "LINEAR16",
+                    sampleRateHertz = options?.GetValueOrDefault("sampleRateHertz", 24000) ?? 24000
+                }
+            });
+
+            try
+            {
+                OnTtsStart?.Invoke(this, new TtsStreamingEventArgs
+                {
+                    Text = text,
+                    Voice = voice ?? "en-US-Standard-A",
+                    TotalBytes = 0,
+                    AudioData = Array.Empty<byte>()
+                });
+
+                var response = await client.ExecuteAsync(request);
+                if (!response.IsSuccessful)
+                    throw new Exception($"Google TTS Error: {response.ErrorMessage}");
+
+                var jsonResponse = JsonSerializer.Deserialize<JsonElement>(response.Content);
+                var audioContent = jsonResponse.GetProperty("audioContent").GetString();
+                
+                var audioData = Convert.FromBase64String(audioContent);
+                var totalBytes = audioData.Length;
+                var bytesProcessed = 0;
+
+                while (bytesProcessed < totalBytes)
+                {
+                    var remainingBytes = totalBytes - bytesProcessed;
+                    var currentChunkSize = Math.Min(CHUNK_SIZE, remainingBytes);
+                    var chunk = new byte[currentChunkSize];
+                    Array.Copy(audioData, bytesProcessed, chunk, 0, currentChunkSize);
+                    bytesProcessed += currentChunkSize;
+
+                    OnTtsReceiving?.Invoke(this, new TtsStreamingEventArgs
+                    {
+                        Text = text,
+                        Voice = voice ?? "en-US-Standard-A",
+                        TotalBytes = totalBytes,
+                        ProcessedBytes = bytesProcessed,
+                        ProgressPercentage = (double)bytesProcessed / totalBytes * 100,
+                        AudioData = chunk
+                    });
+
+                    await Task.Delay(50); // Simulate streaming delay
+                }
+
+                OnTtsFinish?.Invoke(this, new TtsStreamingEventArgs
+                {
+                    Text = text,
+                    Voice = voice ?? "en-US-Standard-A",
+                    TotalBytes = totalBytes,
+                    ProcessedBytes = totalBytes,
+                    ProgressPercentage = 100,
+                    AudioData = Array.Empty<byte>()
+                });
+            }
+            catch (Exception ex)
+            {
+                OnTtsFinish?.Invoke(this, new TtsStreamingEventArgs
+                {
+                    Text = text,
+                    Voice = voice ?? "en-US-Standard-A",
+                    Error = ex.Message,
+                    AudioData = Array.Empty<byte>()
+                });
+                throw;
+            }
+
+        }
+    }
+}
