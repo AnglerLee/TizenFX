@@ -74,7 +74,7 @@ namespace AIAvatar
 
         private void LoadAudioResource()
         {
-            waveData = Utils.LoadWave(Utils.ResourcePath + "/Voice/en_tts.wav");
+            waveData = AudioUtils.LoadWave(Utils.ResourcePath + "/Voice/en_tts.wav");
             Log.Info(Utils.LogTag, $"{waveData.NumChannels}, {waveData.SampleRate}");
         }
 
