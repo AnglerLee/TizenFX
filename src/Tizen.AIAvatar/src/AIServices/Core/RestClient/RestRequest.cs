@@ -20,6 +20,7 @@ using System.Text;
 using System;
 using System.Net.Http;
 using System.Collections.Generic;
+using System.Text.Json.Serialization;
 
 namespace Tizen.AIAvatar
 {
@@ -38,8 +39,7 @@ namespace Tizen.AIAvatar
         public Method Method { get; }
         private readonly Dictionary<string, string> _headers;
         private object _body;
-
-
+     
         public RestRequest(Method method)
         {
             Resource = string.Empty;
@@ -86,7 +86,8 @@ namespace Tizen.AIAvatar
 
             if (_body != null)
             {
-                var jsonBody = JsonSerializer.Serialize(_body);
+                var jsonBody = JsonSerializer.Serialize(_body, new JsonSerializerOptions { DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull });
+
                 request.Content = new StringContent(jsonBody, Encoding.UTF8, "application/json");
             }
 

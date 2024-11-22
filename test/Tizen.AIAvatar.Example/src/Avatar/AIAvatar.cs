@@ -84,19 +84,13 @@ namespace AIAvatar
         {
 
             InitializeBodyAnimations();
-            bodyAnimator.AnimatorStateChanged += OnAnimationStateChanged;
-
             InitializeFaceAnimations();
             InitializeCustomAnimations();
-            faceAnimator.AnimatorStateChanged += OnAnimationStateChanged;
-            
-            InitialzeLipSync();
-            lipSyncer.AnimatorStateChanged += OnAnimationStateChanged;
 
+            InitializeAudioPlayer();
 
-            InitializeAudioPlayer();       
-            
-            
+            InitializeLipSync();
+            InitializeAIServices(); 
         }
 
         public void PlayRandomBodyAnimation()
@@ -205,6 +199,8 @@ namespace AIAvatar
                     var faceAnim = GenerateMotionDataAnimation(motion.MotionData);
                     faceAnimator.Add(faceAnim, motion.MotionName);
                 }
+
+                faceAnimator.AnimatorStateChanged += OnAnimationStateChanged;
             }
             catch (Exception e)
             {
@@ -222,6 +218,8 @@ namespace AIAvatar
                     bodyAnim.BlendPoint = 0.2f;
                     bodyAnimator.Add(bodyAnim, motion.MotionName);
                 }
+
+                bodyAnimator.AnimatorStateChanged += OnAnimationStateChanged;
             }
             catch (Exception e)
             {
@@ -246,10 +244,13 @@ namespace AIAvatar
             }
         }
 
-        private void InitialzeLipSync()
+        private void InitializeLipSync()
         {
             lipSyncer = new LipSyncer();
             lipSyncer.Initialize(this, Utils.ResourcePath + "/Model/emoji_viseme_blendshapes.json");
+            lipSyncer.AnimatorStateChanged += OnAnimationStateChanged;
+
+            audio2Vowels = new Audio2Vowels(Utils.ResourcePath + "/Intelligence/LipSync/audio2vowel_7.tflite");
         }
 
         private void InitializeAudioPlayer()
@@ -258,11 +259,8 @@ namespace AIAvatar
             audioOptions.DuckingOptions(Tizen.Multimedia.AudioStreamType.Media, 500, 0.2);
 
             audioPlayer = new AudioPlayer(audioOptions);
-
-            audio2Vowels = new Audio2Vowels(Utils.ResourcePath + "/Intelligence/LipSync/audio2vowel_7.tflite");
-
-
         }
+
 
         private void OnAnimationStateChanged(object sender, AnimatorChangedEventArgs e)
         {

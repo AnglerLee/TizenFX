@@ -41,9 +41,11 @@ namespace Tizen.AIAvatar
     {
         private readonly OpenAIConfiguration config;
 
-        public event EventHandler<TtsStreamingEventArgs> OnTtsStart;
-        public event EventHandler<TtsStreamingEventArgs> OnTtsReceiving;
-        public event EventHandler<TtsStreamingEventArgs> OnTtsFinish;
+        public event EventHandler<llmResponseEventArgs> ResponseHandler;
+
+        public event EventHandler<ttsStreamingEventArgs> OnTtsStart;
+        public event EventHandler<ttsStreamingEventArgs> OnTtsReceiving;
+        public event EventHandler<ttsStreamingEventArgs> OnTtsFinish;
 
         public override string ServiceName => "OpenAI";
         public override ServiceCapabilities Capabilities =>
@@ -54,9 +56,7 @@ namespace Tizen.AIAvatar
             this.config = config;
         }
 
-        public async Task<string> GenerateTextAsync(
-            string prompt,
-            Dictionary<string, object> options = null)
+        public async Task GenerateTextAsync(string prompt, Dictionary<string, object> options = null)
         {
             var client = ClientManager.GetClient(config.Endpoints.LLMEndpoint);
             var messages = new List<object>
@@ -74,16 +74,22 @@ namespace Tizen.AIAvatar
                     max_tokens = options?.GetValueOrDefault("max_tokens", 1000)
                 });
 
-            var response = await client.ExecuteAsync(request);
+            var response = await client.ExecuteAsync(request).ConfigureAwait(false);
+
             if (!response.IsSuccessful)
-                throw new Exception($"OpenAI API Error: {response.ErrorMessage}");
+            {
+                ResponseHandler?.Invoke(this, new llmResponseEventArgs { Error = response.ErrorMessage });
+                return;
+            }
 
             var jsonResponse = JsonSerializer.Deserialize<JsonElement>(response.Content);
-            return jsonResponse
-                .GetProperty("choices")[0]
-                .GetProperty("message")
-                .GetProperty("content")
-                .GetString();
+            string content = jsonResponse
+                                .GetProperty("choices")[0]
+                                .GetProperty("message")
+                                .GetProperty("content")
+                                .GetString();
+
+            ResponseHandler?.Invoke(this, new llmResponseEventArgs { Text = content });
         }
 
         public async Task<byte[]> TextToSpeechAsync(
@@ -131,7 +137,7 @@ namespace Tizen.AIAvatar
 
             try
             {
-                OnTtsStart?.Invoke(this, new TtsStreamingEventArgs
+                OnTtsStart?.Invoke(this, new ttsStreamingEventArgs
                 {
                     Text = text,
                     Voice = voice ?? "alloy",
@@ -159,7 +165,7 @@ namespace Tizen.AIAvatar
                     bytesProcessed += currentChunkSize;
 
                     // 현재 청크의 진행 정보와 함께 오디오 데이터를 이벤트로 전달
-                    OnTtsReceiving?.Invoke(this, new TtsStreamingEventArgs
+                    OnTtsReceiving?.Invoke(this, new ttsStreamingEventArgs
                     {
                         Text = text,
                         Voice = voice ?? "alloy",
@@ -173,7 +179,7 @@ namespace Tizen.AIAvatar
                     // await Task.Delay(FRAME_DURATION_MS);
                 }
 
-                OnTtsFinish?.Invoke(this, new TtsStreamingEventArgs
+                OnTtsFinish?.Invoke(this, new ttsStreamingEventArgs
                 {
                     Text = text,
                     Voice = voice ?? "alloy",
@@ -185,7 +191,7 @@ namespace Tizen.AIAvatar
             }
             catch (Exception ex)
             {
-                OnTtsFinish?.Invoke(this, new TtsStreamingEventArgs
+                OnTtsFinish?.Invoke(this, new ttsStreamingEventArgs
                 {
                     Text = text,
                     Voice = voice ?? "alloy",

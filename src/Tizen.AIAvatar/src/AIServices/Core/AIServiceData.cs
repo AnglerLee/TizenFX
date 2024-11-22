@@ -29,7 +29,14 @@ namespace Tizen.AIAvatar
         public Dictionary<string, object> Metadata { get; set; } = new();
     }
 
-    public class TtsStreamingEventArgs : EventArgs
+    public class llmResponseEventArgs : EventArgs
+    {     
+        public string Text { get; set; }
+        public string Error { get; set; }
+    }
+
+
+    public class ttsStreamingEventArgs : EventArgs
     {
         public byte[] AudioData { get; set; }  // 현재 청크의 오디오 데이터
         public string Text { get; set; }
@@ -40,7 +47,7 @@ namespace Tizen.AIAvatar
         public string Error { get; set; }        
     }
 
-    public class SttStreamingEventArgs : EventArgs
+    public class sttStreamingEventArgs : EventArgs
     {
         public bool Interim { get; set; }
         public string Text { get; set; }

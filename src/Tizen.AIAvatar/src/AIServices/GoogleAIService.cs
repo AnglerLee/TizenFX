@@ -43,20 +43,22 @@ namespace Tizen.AIAvatar
     {
         private readonly GoogleAIConfiguration config;
 
-        public event EventHandler<TtsStreamingEventArgs> OnTtsStart;
-        public event EventHandler<TtsStreamingEventArgs> OnTtsReceiving;
-        public event EventHandler<TtsStreamingEventArgs> OnTtsFinish;
+        public event EventHandler<llmResponseEventArgs> ResponseHandler;
+
+        public event EventHandler<ttsStreamingEventArgs> OnTtsStart;
+        public event EventHandler<ttsStreamingEventArgs> OnTtsReceiving;
+        public event EventHandler<ttsStreamingEventArgs> OnTtsFinish;
 
 
-        public event EventHandler<SttStreamingEventArgs> OnSttStart;
-        public event EventHandler<SttStreamingEventArgs> OnSttReceiving;
-        public event EventHandler<SttStreamingEventArgs> OnSttFinish;
+        public event EventHandler<sttStreamingEventArgs> OnSttStart;
+        public event EventHandler<sttStreamingEventArgs> OnSttReceiving;
+        public event EventHandler<sttStreamingEventArgs> OnSttFinish;
 
         public override string ServiceName => "GoogleAI";
         public override ServiceCapabilities Capabilities =>
-            ServiceCapabilities.TextToSpeech |
-            ServiceCapabilities.SpeechToText |
-            ServiceCapabilities.LargeLanguageModel;
+                                    ServiceCapabilities.TextToSpeech |
+                                    ServiceCapabilities.SpeechToText |
+                                    ServiceCapabilities.LargeLanguageModel;
 
         
 
@@ -65,7 +67,7 @@ namespace Tizen.AIAvatar
             this.config = config;
         }
 
-        public async Task<string> GenerateTextAsync(string prompt, Dictionary<string, object> options = null)
+        public async Task GenerateTextAsync(string prompt, Dictionary<string, object> options = null)
         {
             // API 키가 포함된 전체 URL을 baseUrl로 사용
             var fullUrl = $"{config.Endpoints.LLMEndpoint}{config.Model}:generateContent?key={config.ApiKey}";
@@ -96,17 +98,22 @@ namespace Tizen.AIAvatar
                     }
                 });
 
-            var response = await client.ExecuteAsync(request);
+            var response = await client.ExecuteAsync(request).ConfigureAwait(false);
             if (!response.IsSuccessful)
-                throw new Exception($"Google AI API Error: {response.ErrorMessage}");
+            {
+                ResponseHandler?.Invoke(this, new llmResponseEventArgs { Error = response.ErrorMessage });
+                return;
+            }
 
             var jsonResponse = JsonSerializer.Deserialize<JsonElement>(response.Content);
-            return jsonResponse
-                .GetProperty("candidates")[0]
-                .GetProperty("content")
-                .GetProperty("parts")[0]
-                .GetProperty("text")
-                .GetString();
+            string content = jsonResponse
+                                .GetProperty("candidates")[0]
+                                .GetProperty("content")
+                                .GetProperty("parts")[0]
+                                .GetProperty("text")
+                                .GetString();
+
+            ResponseHandler?.Invoke(this, new llmResponseEventArgs { Text = content });
         }
 
    
@@ -155,7 +162,7 @@ namespace Tizen.AIAvatar
 
             try
             {
-                OnSttStart?.Invoke(this, new SttStreamingEventArgs
+                OnSttStart?.Invoke(this, new sttStreamingEventArgs
                 {
                     Interim = false,
                     Text = string.Empty
@@ -177,7 +184,7 @@ namespace Tizen.AIAvatar
                         var intermediateAudio = ms.ToArray();
                         var intermediateText = await SpeechToTextAsync(intermediateAudio, options);
 
-                        OnSttReceiving?.Invoke(this, new SttStreamingEventArgs
+                        OnSttReceiving?.Invoke(this, new sttStreamingEventArgs
                         {
                             Interim = true,
                             Text = intermediateText
@@ -194,7 +201,7 @@ namespace Tizen.AIAvatar
                     var finalAudio = ms.ToArray();
                     var finalText = await SpeechToTextAsync(finalAudio, options);
 
-                    OnSttFinish?.Invoke(this, new SttStreamingEventArgs
+                    OnSttFinish?.Invoke(this, new sttStreamingEventArgs
                     {
                         Interim = false,
                         Text = finalText
@@ -203,7 +210,7 @@ namespace Tizen.AIAvatar
             }
             catch (Exception ex)
             {
-                OnSttFinish?.Invoke(this, new SttStreamingEventArgs
+                OnSttFinish?.Invoke(this, new sttStreamingEventArgs
                 {
                     Error = ex.Message,
                     Text = string.Empty
@@ -274,7 +281,7 @@ namespace Tizen.AIAvatar
 
             try
             {
-                OnTtsStart?.Invoke(this, new TtsStreamingEventArgs
+                OnTtsStart?.Invoke(this, new ttsStreamingEventArgs
                 {
                     Text = text,
                     Voice = voice ?? "en-US-Standard-A",
@@ -301,7 +308,7 @@ namespace Tizen.AIAvatar
                     Array.Copy(audioData, bytesProcessed, chunk, 0, currentChunkSize);
                     bytesProcessed += currentChunkSize;
 
-                    OnTtsReceiving?.Invoke(this, new TtsStreamingEventArgs
+                    OnTtsReceiving?.Invoke(this, new ttsStreamingEventArgs
                     {
                         Text = text,
                         Voice = voice ?? "en-US-Standard-A",
@@ -314,7 +321,7 @@ namespace Tizen.AIAvatar
                     await Task.Delay(50); // Simulate streaming delay
                 }
 
-                OnTtsFinish?.Invoke(this, new TtsStreamingEventArgs
+                OnTtsFinish?.Invoke(this, new ttsStreamingEventArgs
                 {
                     Text = text,
                     Voice = voice ?? "en-US-Standard-A",
@@ -326,7 +333,7 @@ namespace Tizen.AIAvatar
             }
             catch (Exception ex)
             {
-                OnTtsFinish?.Invoke(this, new TtsStreamingEventArgs
+                OnTtsFinish?.Invoke(this, new ttsStreamingEventArgs
                 {
                     Text = text,
                     Voice = voice ?? "en-US-Standard-A",

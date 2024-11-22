@@ -26,9 +26,9 @@ namespace Tizen.AIAvatar
 
     public interface ITextToSpeechService
     {
-        event EventHandler<TtsStreamingEventArgs> OnTtsStart;
-        event EventHandler<TtsStreamingEventArgs> OnTtsReceiving;
-        event EventHandler<TtsStreamingEventArgs> OnTtsFinish;
+        event EventHandler<ttsStreamingEventArgs> OnTtsStart;
+        event EventHandler<ttsStreamingEventArgs> OnTtsReceiving;
+        event EventHandler<ttsStreamingEventArgs> OnTtsFinish;
 
         Task<byte[]> TextToSpeechAsync(
             string text,
@@ -56,9 +56,10 @@ namespace Tizen.AIAvatar
 
     public interface ILLMService
     {
-        Task<string> GenerateTextAsync(
-            string prompt,
-            Dictionary<string, object> options = null);
+        event EventHandler<llmResponseEventArgs> ResponseHandler;
+
+        Task GenerateTextAsync(string prompt, Dictionary<string, object> options = null);
+
     }
 }
 

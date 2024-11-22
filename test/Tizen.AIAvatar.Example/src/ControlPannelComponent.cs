@@ -233,7 +233,7 @@ namespace AIAvatar
             AddControlButton("Pause", "button_bvh", mainScene.AIAvatar.PauseAnimations);
             AddControlButton("Stop", "button_bvh", mainScene.AIAvatar.StopAnimations);
             AddControlButton("EyeBlink", "button_bvh", mainScene.AIAvatar.StartEyeBlink);
-            AddControlButton("TTS Init", "button_avatar", mainScene.InintTTsTest);
+            AddControlButton("TTS Init", "button_avatar", mainScene.AIAvatar.TestSamsungAIService);
             AddControlButton("TTS Start", "button_avatar", mainScene.StartTTSTest);
             AddControlButton("TTS Stop", "button_avatar", mainScene.StopTTSTest);
             AddControlButton("Show/Hide", "button_bvh", mainScene.ShowHide);
