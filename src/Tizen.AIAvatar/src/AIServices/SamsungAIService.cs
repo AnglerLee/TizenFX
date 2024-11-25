@@ -18,6 +18,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
@@ -99,19 +100,38 @@ namespace Tizen.AIAvatar
         {
             var client = ClientManager.GetClient(config.Endpoints.LLMEndpoint);
             var messages = new List<object>
-    {
-        new { role = "user", content = prompt }
-    };
+            {
+                new { role = "user", content = prompt }
+            };
 
             var request = new RestRequest(Method.Post)
-                .AddHeader("Authorization", $"Bearer {config.ApiKey}")
-                .AddJsonBody(new
+                .AddHeader("Authorization", $"Bearer {config.ApiKey}");
+
+            if (options != null && options.TryGetValue("jsonFilePath", out var jsonFilePathObj) && jsonFilePathObj is string jsonFilePath)
+            {
+                // Read JSON file content
+                if (File.Exists(jsonFilePath))
+                {
+                    var jsonContent = await File.ReadAllTextAsync(jsonFilePath).ConfigureAwait(false);
+                    request.AddJsonStringBody(jsonContent);
+                }
+                else
+                {
+                    ResponseHandler?.Invoke(this, new llmResponseEventArgs { Error = $"File not found: {jsonFilePath}" });
+                    return;
+                }
+            }
+            else
+            {
+                // Add the default body if no JSON file is provided
+                request.AddJsonBody(new
                 {
                     model = config.Model,
                     messages = messages,
                     temperature = options?["temperature"] ?? 0.5,
                     seed = options?.GetValueOrDefault("seed", 0)
                 });
+            }
 
             var response = await client.ExecuteAsync(request).ConfigureAwait(false);
             if (!response.IsSuccessful)

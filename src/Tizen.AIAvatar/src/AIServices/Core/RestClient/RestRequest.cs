@@ -39,7 +39,8 @@ namespace Tizen.AIAvatar
         public Method Method { get; }
         private readonly Dictionary<string, string> _headers;
         private object _body;
-     
+        private string _jsonStringBody;
+
         public RestRequest(Method method)
         {
             Resource = string.Empty;
@@ -63,6 +64,18 @@ namespace Tizen.AIAvatar
         public RestRequest AddJsonBody(object body)
         {
             _body = body;
+            _jsonStringBody = null; // Clear json string if object body is set
+            if (!_headers.ContainsKey("Content-Type"))
+            {
+                _headers["Content-Type"] = "application/json";
+            }
+            return this;
+        }
+
+        public RestRequest AddJsonStringBody(string jsonString)
+        {
+            _jsonStringBody = jsonString;
+            _body = null; // Clear object body if json string is set
             if (!_headers.ContainsKey("Content-Type"))
             {
                 _headers["Content-Type"] = "application/json";
@@ -84,10 +97,13 @@ namespace Tizen.AIAvatar
                 request.Headers.TryAddWithoutValidation(header.Key, header.Value);
             }
 
-            if (_body != null)
+            if (_jsonStringBody != null)
+            {
+                request.Content = new StringContent(_jsonStringBody, Encoding.UTF8, "application/json");
+            }
+            else if (_body != null)
             {
                 var jsonBody = JsonSerializer.Serialize(_body, new JsonSerializerOptions { DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull });
-
                 request.Content = new StringContent(jsonBody, Encoding.UTF8, "application/json");
             }
 
