@@ -83,30 +83,16 @@ namespace AIAvatar
         {
             if (!isShowing)
             {
-                
+                defaultAIAvatar.Show();
             }
             else
             {
-                
+                defaultAIAvatar.Hide();
             }
             isShowing = !isShowing;
         }
 
-        public void InintTTsTest()
-        {
-
-        }
-
-        public void StartTTSTest()
-        {
-           
-        }
-
-        public void StopTTSTest()
-        {
-           
-        }
-
+       
         public void SwitchCamera()
         {
             CameraTransition(1, cameraAnimationDurationMilliSeconds);

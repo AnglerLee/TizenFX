@@ -4,6 +4,8 @@ using System.IO;
 using System.Threading.Tasks;
 using Tizen;
 using Tizen.AIAvatar;
+using Tizen.AIAvatar.NUI;
+using Tizen.NUI;
 using Tizen.NUI.Scene3D;
 
 namespace AIAvatar
@@ -19,6 +21,7 @@ namespace AIAvatar
         private SamsungAIService samsungAIService;
         private SamsungAIConfiguration samsungAIConfig;
 
+        private int ttsStreamingAudioBytes = 0;
 
 
         public void InitializeAIServices()
@@ -31,12 +34,15 @@ namespace AIAvatar
 
             samsungAIService = new SamsungAIService(samsungAIConfig);
             samsungAIService.ResponseHandler += HandleResponse;
+
+            samsungAIService.OnTtsStart += OnTtsStart;
+            samsungAIService.OnTtsReceiving += OnTtsReceiving;
+            samsungAIService.OnTtsFinish += OnTtsFinish;
         }
 
         public void TestSamsungAIService()
         {
-            TestSamsungTextGeneration(samsungAIService);
-            //await TestOpenAITTS(openAIService);           
+            TestSamsungTextGeneration(samsungAIService);                 
         }
 
         #region SamsungAI Services
@@ -45,10 +51,21 @@ namespace AIAvatar
         {
             var task = Task.Run(async () =>
             {
-                await samsungAIService.GenerateTextAsync("hello?");
+                await samsungAIService.GenerateTextAsync(Utils.TTSText);
             });
 
 
+        }
+
+        private void TestSamsungTTS(string text)
+        {
+            var task = Task.Run(async () =>
+            {
+                var options = new Dictionary<string, object> {  { "voiceType", VoiceType.Female },
+                                                                { "speechRate", 1.0f } };
+
+                await samsungAIService.TextToSpeechStreamAsync(text, "en_US", options);
+            });
         }
 
         #endregion
@@ -88,27 +105,10 @@ namespace AIAvatar
                 "Hello from OpenAI!", "alloy");
             await File.WriteAllBytesAsync("openai_speech.mp3", speechBytes);
 
-            // Streaming TTS test
-            AudioProcessor audioProcessor = new AudioProcessor();
-            string outputPath = System.IO.Path.Combine(Utils.ResourcePath, "OpenAI_TTS.wav");
-
-
-            openAIService.OnTtsStart += (sender, e) =>
-             Log.Info(Utils.LogTag, $"Started TTS for text: {e.Text}");
-
-            openAIService.OnTtsReceiving += (sender, e) =>
-            {
-                Log.Info(Utils.LogTag, $"Progress: {e.ProgressPercentage:F2}%");
-                audioProcessor.ProcessAudioChunk(e.AudioData);
-            };
-
-            openAIService.OnTtsFinish += async (sender, e) =>
-            {
-                Log.Info(Utils.LogTag, "TTS streaming completed");
-                await audioProcessor.SaveToFileAsync(outputPath);
-                audioProcessor.Dispose();
-            };
-
+           
+            openAIService.OnTtsStart += OnTtsStart;
+            openAIService.OnTtsReceiving += OnTtsReceiving;
+            openAIService.OnTtsFinish += OnTtsFinish;
 
             await openAIService.TextToSpeechStreamAsync(
                 "Hello from OpenAI!, I'm so excited to go on vacation!", "alloy");
@@ -156,27 +156,10 @@ namespace AIAvatar
             // Basic TTS test
             var speechBytes = await googleAIService.TextToSpeechAsync(
                 "Hello from Google AI!", "en-US-Standard-A");
-
-            AudioProcessor audioProcessor = new AudioProcessor();
-            string outputPath = System.IO.Path.Combine(Utils.ResourcePath, "GoogleTTS.wav");
-
-
-            googleAIService.OnTtsStart += (sender, e) =>
-                Log.Info(Utils.LogTag, $"Started TTS for text: {e.Text}");
-
-            googleAIService.OnTtsReceiving += (sender, e) =>
-            {
-                Log.Info(Utils.LogTag, $"Progress: {e.ProgressPercentage:F2}%");
-                audioProcessor.ProcessAudioChunk(e.AudioData);
-            };
-
-            googleAIService.OnTtsFinish += async (sender, e) =>
-            {
-                Log.Info(Utils.LogTag, "TTS streaming completed");
-                await audioProcessor.SaveToFileAsync(outputPath);
-                audioProcessor.Dispose();
-            };
-
+                      
+            googleAIService.OnTtsStart += OnTtsStart;
+            googleAIService.OnTtsReceiving += OnTtsReceiving;
+            googleAIService.OnTtsFinish += OnTtsFinish;
 
             var tts_options = new Dictionary<string, object>
             {
@@ -211,11 +194,43 @@ namespace AIAvatar
         {
             if (e.Error != null)
             {
+                TestSamsungTTS(e.Error);
                 Log.Info(Utils.LogTag, $"Error: {e.Error}");
                 return;
             }
-                        
+
+            TestSamsungTTS(e.Text);
             Log.Info(Utils.LogTag, $"Response: {e.Text}");
+        }
+
+        private void OnTtsStart(object sender, ttsStreamingEventArgs e)
+        {
+            lipSyncer.Stop();
+            audioPlayer.Stop();
+
+            audioPlayer.PlayStreamAudio(e.SampleRate);
+            audio2Vowels.SetSampleRate(e.SampleRate);
+
+            ttsStreamingAudioBytes = e.AudioBytes;
+            Log.Info(Utils.LogTag, $"Started TTS for text: {e.Text}");
+        }
+
+        private void OnTtsReceiving(object sender, ttsStreamingEventArgs e)
+        {
+            Span<byte> playAudioData = e.AudioData.AsSpan(0, ttsStreamingAudioBytes);
+            audioPlayer.AddStream(playAudioData.ToArray());
+
+            var predictVowels = audio2Vowels.PredictVowels(e.AudioData);
+
+            Animation lipAnimation = lipSyncer.GenerateAnimationFromVowels(predictVowels, 0.08f, true);
+            lipSyncer.Enqueue(lipAnimation);
+
+            Log.Info(Utils.LogTag, string.Join(", ", predictVowels));
+        }
+
+        private void OnTtsFinish(object sender, ttsStreamingEventArgs e)
+        {
+            Log.Info(Utils.LogTag, "TTS streaming completed");
         }
 
     }

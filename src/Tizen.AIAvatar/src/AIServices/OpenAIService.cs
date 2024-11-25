@@ -120,8 +120,10 @@ namespace Tizen.AIAvatar
         {
             const int SAMPLE_RATE = 24000;  // OpenAI TTS의 기본 샘플레이트
             const int FRAME_DURATION_MS = 160;  // 160ms 단위로 분할
+            const int TAIL_DURATION_MS = 15;
             const int BYTES_PER_SAMPLE = 2;  // 16-bit PCM
             const int CHUNK_SIZE = (SAMPLE_RATE * FRAME_DURATION_MS * BYTES_PER_SAMPLE) / 1000;  // 160ms worth of PCM data
+            const int TAIL_CHUNK_SIZE = (SAMPLE_RATE * TAIL_DURATION_MS * BYTES_PER_SAMPLE) / 1000;
 
             var client = ClientManager.GetClient(config.Endpoints.TextToSpeechEndpoint);
             var request = new RestRequest("speech", Method.Post)
@@ -141,6 +143,7 @@ namespace Tizen.AIAvatar
                 {
                     Text = text,
                     Voice = voice ?? "alloy",
+                    SampleRate = SAMPLE_RATE,
                     TotalBytes = 0,
                     AudioData = Array.Empty<byte>()
                 });
@@ -159,10 +162,10 @@ namespace Tizen.AIAvatar
                 while (bytesProcessed < totalBytes)
                 {
                     var remainingBytes = totalBytes - bytesProcessed;
-                    var currentChunkSize = Math.Min(CHUNK_SIZE, remainingBytes);
+                    var currentChunkSize = Math.Min(CHUNK_SIZE + TAIL_CHUNK_SIZE, remainingBytes);
                     var chunk = new byte[currentChunkSize];
                     Array.Copy(audioData, bytesProcessed, chunk, 0, currentChunkSize);
-                    bytesProcessed += currentChunkSize;
+                    bytesProcessed += Math.Min(CHUNK_SIZE, remainingBytes);
 
                     // 현재 청크의 진행 정보와 함께 오디오 데이터를 이벤트로 전달
                     OnTtsReceiving?.Invoke(this, new ttsStreamingEventArgs

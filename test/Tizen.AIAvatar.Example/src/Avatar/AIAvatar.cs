@@ -18,7 +18,7 @@ namespace AIAvatar
         private WaveData waveData;
         private AudioPlayer audioPlayer;
         private AudioOptions audioOptions;
-                        
+
         private SerialAnimator bodyAnimator = new SerialAnimator();
         private ParallelAnimator faceAnimator = new ParallelAnimator();
 
@@ -31,7 +31,7 @@ namespace AIAvatar
 
         private string[] testVowels = { "sil", "A", "E", "I", "O", "U", "A", "E", "I", "O", "U", "sil", "ER", "HM", "sil", "sil" };
 
-        
+
 
 
         public AIAvatar() : base()
@@ -90,7 +90,7 @@ namespace AIAvatar
             InitializeAudioPlayer();
 
             InitializeLipSync();
-            InitializeAIServices(); 
+            InitializeAIServices();
         }
 
         public void PlayRandomBodyAnimation()
@@ -129,6 +129,7 @@ namespace AIAvatar
         {
             try
             {
+                lipSyncer.Stop();
                 Animation lipAnimation = lipSyncer.GenerateAnimationFromVowels(testVowels, 0.08f);
                 lipSyncer.Enqueue(lipAnimation);
                 lipSyncer.Play();
@@ -142,27 +143,34 @@ namespace AIAvatar
 
         public void PlayAudioLipSync()
         {
+            PlayLipSync();
+
+            audioPlayer.Stop();
+
             audio2Vowels.SetSampleRate(waveData.SampleRate);
             testVowels = audio2Vowels.PredictVowels(waveData.RawAudioData);
             Log.Info(Utils.LogTag, $"{string.Join(", ", testVowels)}");
 
             audioPlayer.Play(waveData.RawAudioData, waveData.SampleRate);
-            PlayLipSync();
+
         }
 
         public void PlayAudioLipSyncStream()
         {
+            PlayStreamingLipSync();
+
+            audioPlayer.Stop();
+
             audio2Vowels.SetSampleRate(waveData.SampleRate);
             testVowels = audio2Vowels.PredictVowels(waveData.RawAudioData);
             Log.Info(Utils.LogTag, $"{string.Join(", ", testVowels)}");
 
             audioPlayer.Play(waveData.RawAudioData, waveData.SampleRate);
-            PlayStreamingLipSync();
         }
 
 
 
-            public void PauseAnimations()
+        public void PauseAnimations()
         {
             bodyAnimator.Pause();
             faceAnimator.Pause();
@@ -254,7 +262,7 @@ namespace AIAvatar
         }
 
         private void InitializeAudioPlayer()
-        {   
+        {
             audioOptions = new AudioOptions(24000, Tizen.Multimedia.AudioChannel.Mono, Tizen.Multimedia.AudioSampleType.S16Le, Tizen.Multimedia.AudioStreamType.System);
             audioOptions.DuckingOptions(Tizen.Multimedia.AudioStreamType.Media, 500, 0.2);
 

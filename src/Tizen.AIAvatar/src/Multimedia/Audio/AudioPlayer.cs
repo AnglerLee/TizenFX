@@ -81,6 +81,7 @@ namespace Tizen.AIAvatar
 
         public void InitializeStream()
         {
+            isStreaming = true;
             streamIndex = 0;
             streamList.Clear();
         }
@@ -96,8 +97,8 @@ namespace Tizen.AIAvatar
         }
 
         public void PlayStreamAudio(int sampleRate = 0)
-        {
-            isStreaming = true;
+        {            
+            InitializeStream();
 
             if (audioPlayback == null || audioPlayback.SampleRate != sampleRate)
             {

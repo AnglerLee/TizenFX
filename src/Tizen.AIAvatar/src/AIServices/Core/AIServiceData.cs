@@ -39,8 +39,10 @@ namespace Tizen.AIAvatar
     public class ttsStreamingEventArgs : EventArgs
     {
         public byte[] AudioData { get; set; }  // 현재 청크의 오디오 데이터
+        public int SampleRate { get; set; }
         public string Text { get; set; }
         public string Voice { get; set; }
+        public int AudioBytes { get; set; }
         public int TotalBytes { get; set; }
         public int ProcessedBytes { get; set; }
         public double ProgressPercentage { get; set; }

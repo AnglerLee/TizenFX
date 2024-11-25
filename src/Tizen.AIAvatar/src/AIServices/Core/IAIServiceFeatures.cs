@@ -57,9 +57,7 @@ namespace Tizen.AIAvatar
     public interface ILLMService
     {
         event EventHandler<llmResponseEventArgs> ResponseHandler;
-
         Task GenerateTextAsync(string prompt, Dictionary<string, object> options = null);
-
     }
 }
 

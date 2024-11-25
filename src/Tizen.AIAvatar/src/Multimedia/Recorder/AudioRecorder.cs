@@ -24,9 +24,7 @@ using static Tizen.AIAvatar.AIAvatar;
 namespace Tizen.AIAvatar
 {
     internal class AudioRecorder : IDisposable
-    {
-        private const string privilegeForRecording = "http://tizen.org/privilege/recorder";
-
+    {        
         private AsyncAudioCapture asyncAudioCapture;
 
         private byte[] recordedBuffer;
@@ -56,7 +54,6 @@ namespace Tizen.AIAvatar
 
         internal AudioRecorder()
         {
-            //Utils.CheckPrivilege(privilegeForRecording);
             desiredBufferLength = (int)(CurrentAudioOptions.SampleRate * desiredBufferDuration * 2);
         }
 

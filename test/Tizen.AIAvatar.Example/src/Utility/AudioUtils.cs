@@ -124,6 +124,11 @@ namespace AIAvatar
             }
         }
 
+        public long getAudioBufferSize()
+        {
+            return audioBuffer.Length;
+        }
+
         public async Task SaveToFileAsync(string outputFilePath)
         {
             // WAV 헤더 추가 (PCM 포맷용)

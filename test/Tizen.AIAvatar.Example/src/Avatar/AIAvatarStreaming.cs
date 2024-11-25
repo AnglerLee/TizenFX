@@ -17,9 +17,8 @@ namespace AIAvatar
         {
             if (currentIndex + 2 < testVowels.Length)
             {
-                Animation lipAnimation = lipSyncer.GenerateAnimationFromVowels(new string[] { testVowels[currentIndex], testVowels[currentIndex + 1], testVowels[currentIndex + 2] }, 0.08f, true);
+                Animation lipAnimation = lipSyncer.GenerateAnimationFromVowels(new string[] { testVowels[currentIndex], testVowels[currentIndex + 1] }, 0.08f, true);
                 lipSyncer.Enqueue(lipAnimation);
-                lipSyncer.Play();
                 currentIndex += 2;
             }
             else
@@ -33,6 +32,8 @@ namespace AIAvatar
         {
             try
             {
+                lipSyncer.Stop();
+
                 currentIndex = 0;
                 if (timer != null)
                 {

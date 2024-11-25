@@ -17,8 +17,13 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
+using Tizen.Uix.Tts;
+using static System.Net.Mime.MediaTypeNames;
+using static Tizen.NUI.Shader.Hint;
 
 namespace Tizen.AIAvatar
 {
@@ -41,6 +46,24 @@ namespace Tizen.AIAvatar
     {
         private readonly SamsungAIConfiguration config;
 
+        private readonly TtsClient ttsHandle;
+        private TaskCompletionSource<bool> ttsCompletionSource;
+                
+                
+        private const float audioLengthFactor = 0.16f;
+        private const float audioTailLengthFactor = 0.015f;
+        private const float audioBufferMultiflier = 2f;
+
+        private int audioLength;
+        private int desiredBufferLength;
+        private int audioTailLength;
+
+        private byte[] recordedBuffer;
+        private byte[] audioMainBuffer;
+
+        private float desiredBufferDuration = audioLengthFactor + audioTailLengthFactor;
+        
+
         public event EventHandler<llmResponseEventArgs> ResponseHandler;
 
         public event EventHandler<ttsStreamingEventArgs> OnTtsStart;
@@ -55,6 +78,21 @@ namespace Tizen.AIAvatar
         public SamsungAIService(SamsungAIConfiguration config) : base(config)
         {
             this.config = config;
+
+            try
+            {
+                ttsHandle = new TtsClient();
+                ttsHandle.SynthesizedPcm += TtsSynthesizedPCM;
+                ttsHandle.PlayingMode = PlayingMode.ByClient;
+
+                ttsHandle.Prepare();
+
+                GetSupportedVoices();
+            }
+            catch (Exception e)
+            {
+                throw new Exception($"[ERROR] Failed to prepare TTS {e.Message}");
+            }
         }
 
         public async Task GenerateTextAsync(string prompt, Dictionary<string, object> options = null)
@@ -97,11 +135,173 @@ namespace Tizen.AIAvatar
             return null;
         }
 
-        public async Task TextToSpeechStreamAsync(string text, string voice = null, Dictionary<string, object> options = null)
+        public async Task TextToSpeechStreamAsync(string text, string voice, Dictionary<string, object> options)
         {
+            ttsCompletionSource = new TaskCompletionSource<bool>();
+            recordedBuffer = Array.Empty<byte>();
 
+            //Option 처리
+            SpeedRange speedRange = ttsHandle.GetSpeedRange();
+            int speed = speedRange.Normal;
+            int voiceType = (int)VoiceType.Auto;
+
+            if (options != null)
+            {
+                if (options.ContainsKey("speechRate"))
+                {
+                    float speechRate = (float)(options["speechRate"]) / 2.0f;
+                    speed = (int)(speedRange.Min + (speedRange.Max - speedRange.Min) * speechRate);
+                }
+
+                if (options.ContainsKey("voiceType"))
+                {
+                    voiceType = (int)options["voiceType"];
+                }
+            }
+            /////////
+            try
+            {
+                ttsHandle.AddText(text, voice, voiceType, speed);
+
+                ttsHandle.Play();
+
+                await ttsCompletionSource.Task;
+            }
+            catch (Exception ex)
+            {
+                OnTtsFinish?.Invoke(this, new ttsStreamingEventArgs
+                {
+                    Text = text,
+                    Voice = voice,
+                    Error = ex.Message,
+                    AudioData = Array.Empty<byte>()
+                });
+            }
         }
 
+        private void TtsSynthesizedPCM(object sender, SynthesizedPcmEventArgs e)
+        {
+            try
+            {
+                switch (e.EventType)
+                {
+                    case SynthesizedPcmEvent.Start:
+                        recordedBuffer = Array.Empty<byte>();
+
+                        audioLength = (int)(audioLengthFactor * e.SampleRate * audioBufferMultiflier);
+                        audioTailLength = (int)(audioTailLengthFactor * e.SampleRate  * audioBufferMultiflier);
+                        desiredBufferLength = (int)(desiredBufferDuration * e.SampleRate * audioBufferMultiflier);
+
+                        audioMainBuffer = new byte[desiredBufferLength];
+
+                        OnTtsStart?.Invoke(this, new ttsStreamingEventArgs
+                        {
+                            SampleRate = e.SampleRate,
+                            AudioBytes = audioLength,
+                            TotalBytes = 0,
+                            AudioData = Array.Empty<byte>()
+                        });
+
+                        Log.Info("Tizen.AIAvatar", $"TTS Start: UtteranceId={e.UtteranceId}, SampleRate={e.SampleRate}");
+
+                        break;
+
+                    case SynthesizedPcmEvent.Continue:
+
+                        recordedBuffer = recordedBuffer.Concat(e.Data).ToArray();
+
+                        if (recordedBuffer.Length >= desiredBufferLength)
+                        {
+                            Buffer.BlockCopy(recordedBuffer, 0, audioMainBuffer, 0, desiredBufferLength);
+                            OnTtsReceiving?.Invoke(this, new ttsStreamingEventArgs
+                            {
+                                AudioData = audioMainBuffer,
+                                ProcessedBytes = audioMainBuffer.Length
+                            });
+
+                            
+                            int slicedBufferLength = recordedBuffer.Length - audioLength;
+                            byte[] slicedBuffer = new byte[slicedBufferLength];
+                            Buffer.BlockCopy(recordedBuffer, audioLength, slicedBuffer, 0, slicedBufferLength);
+
+                            recordedBuffer = slicedBuffer;
+                        }
+
+                        break;
+
+                    case SynthesizedPcmEvent.Finish:
+                        Log.Info("Tizen.AIAvatar", $"TTS Finish: UtteranceId={e.UtteranceId}");
+
+                        // Send any remaining audio data
+                        if (recordedBuffer.Length > 0)
+                        {
+                            int minBufferSize = Math.Min(desiredBufferLength, recordedBuffer.Length);
+
+                            Array.Clear(audioMainBuffer, 0, desiredBufferLength);
+                            Buffer.BlockCopy(recordedBuffer, 0, audioMainBuffer, 0, minBufferSize);
+                            OnTtsReceiving?.Invoke(this, new ttsStreamingEventArgs
+                            {
+                                AudioData = audioMainBuffer,
+                                ProcessedBytes = minBufferSize,
+                                ProgressPercentage = 100
+                            });
+                        }
+
+                        OnTtsFinish?.Invoke(this, new ttsStreamingEventArgs
+                        {
+                            AudioData = Array.Empty<byte>(),
+                            TotalBytes = recordedBuffer.Length,
+                            ProgressPercentage = 100
+                        });
+
+                        ttsCompletionSource?.SetResult(true);
+                        break;
+
+                    case SynthesizedPcmEvent.Fail:
+                        var error = "TTS synthesis failed";
+                        
+                        OnTtsFinish?.Invoke(this, new ttsStreamingEventArgs
+                        {
+                            Error = error,
+                            AudioData = Array.Empty<byte>()
+                        });
+
+                        ttsCompletionSource?.SetException(new Exception(error));
+
+                        break;
+
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.Error("Tizen.AIAvatar", $"Error in TtsSynthesizedPCM: {ex.Message}");
+                OnTtsFinish?.Invoke(this, new ttsStreamingEventArgs
+                {
+                    Error = ex.Message,
+                    AudioData = Array.Empty<byte>()
+                });
+                ttsCompletionSource?.SetException(ex);
+            }
+        }
+
+        private List<VoiceInfo> GetSupportedVoices()
+        {
+            var voiceInfoList = new List<VoiceInfo>();
+
+            if (ttsHandle == null)
+            {
+                Log.Error("Tizen.AIAvatar", $"ttsHandle is null");
+                return voiceInfoList;
+            }
+
+            var supportedVoices = ttsHandle.GetSupportedVoices();
+            foreach (var supportedVoice in supportedVoices)
+            {
+                Log.Info("Tizen.AIAvatar", $"{supportedVoice.Language} & {supportedVoice.VoiceType} is supported");
+                voiceInfoList.Add(new VoiceInfo() { Language = supportedVoice.Language, Type = (VoiceType)supportedVoice.VoiceType });
+            }
+            return voiceInfoList;
+        }
         private void OnResponseHandler(llmResponseEventArgs e)
         {
             ResponseHandler?.Invoke(this, e);

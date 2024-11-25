@@ -23,6 +23,8 @@ namespace Tizen.AIAvatar.NUI
         private readonly LipSyncTransformer lipSyncTransformer = new LipSyncTransformer();
         private AnimatorState currentAnimatorState = AnimatorState.Unavailable;
 
+        private string prevVowel = "sil";
+
         /// <summary>
         /// Event triggered when the state of the animator changes.
         /// </summary>
@@ -33,7 +35,7 @@ namespace Tizen.AIAvatar.NUI
         /// </summary>
         public LipSyncer()
         {
-            
+          
         }
 
         /// <summary>
@@ -52,9 +54,14 @@ namespace Tizen.AIAvatar.NUI
         /// Enqueues a lip-sync animation to be played later.
         /// </summary>
         /// <param name="lipAnimation">The animation to enqueue.</param>
-        public void Enqueue(Animation lipAnimation)
+        /// <param name="isAutoPlay">is auto play (default is true).</param>
+        public void Enqueue(Animation lipAnimation, bool isAutoPlay = true)
         {
             queuedAnimations.Enqueue(lipAnimation);
+            if (isAutoPlay)
+            {
+                Play();
+            }
         }
 
         /// <summary>
@@ -66,6 +73,14 @@ namespace Tizen.AIAvatar.NUI
         /// <returns>The generated animation.</returns>
         public Animation GenerateAnimationFromVowels(string[] vowels, float stepTime = 0.08f, bool isStreaming = false)
         {
+            if (isStreaming)
+            {
+                var vowelList = new List<string>(vowels);
+                vowelList.Insert(0, prevVowel);
+                prevVowel = vowelList[vowelList.Count - 1];
+                vowels = vowelList.ToArray();
+            }
+
             var lipData = lipSyncTransformer.TransformVowelsToLipData(vowels, stepTime, isStreaming);
             using var motionData = GenerateMotionFromLipData(lipData);
             var animation = avatar.GenerateMotionDataAnimation(motionData);
@@ -80,7 +95,13 @@ namespace Tizen.AIAvatar.NUI
         /// </summary>
         public void Play()
         {         
-            if (animationTimer == null || !animationTimer.IsRunning())
+            if (animationTimer == null)
+            {
+                PlayNextAnimation(null, null);
+                return;
+            }
+
+            if (animationTimer != null && !animationTimer.IsRunning())
             {
                 PlayNextAnimation(null, null);
             }
@@ -108,6 +129,11 @@ namespace Tizen.AIAvatar.NUI
                 currentAnimation.Stop();
                 currentAnimation.Dispose();
                 currentAnimation = null;
+                
+                queuedAnimations.Clear();
+                animationTimer.Stop();
+                animationTimer.Dispose();
+
                 CurrentAnimatorState = AnimatorState.Stopped;
             }
         }
@@ -149,6 +175,7 @@ namespace Tizen.AIAvatar.NUI
             }
             else
             {
+                prevVowel = "sil";
                 silenceAnimation.Play();
                 CurrentAnimatorState = AnimatorState.AnimationFinished;
             }
