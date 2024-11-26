@@ -17,10 +17,7 @@
 
 using System;
 using System.IO;
-using Tizen.Security;
-using Newtonsoft.Json;
 using System.Collections.Generic;
-using static Tizen.AIAvatar.AIAvatar;
 
 namespace Tizen.AIAvatar
 {
@@ -54,11 +51,6 @@ namespace Tizen.AIAvatar
             }
         }
                 
-
-        internal static T ConvertJson<T>(string jsonString)
-        {
-            return JsonConvert.DeserializeObject<T>(jsonString);
-        }
 
         internal int FindMaxValue<T>(List<T> list, Converter<T, int> projection)
         {

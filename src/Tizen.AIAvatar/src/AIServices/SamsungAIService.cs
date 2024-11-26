@@ -17,14 +17,13 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
+using Tizen.AIAvatar.Samsung;
 using Tizen.Uix.Tts;
-using static System.Net.Mime.MediaTypeNames;
-using static Tizen.NUI.Shader.Hint;
+
 
 namespace Tizen.AIAvatar
 {
@@ -96,16 +95,14 @@ namespace Tizen.AIAvatar
             }
         }
 
-        public async Task GenerateTextAsync(string prompt, Dictionary<string, object> options = null)
+        public async Task GenerateTextAsync(string message, Dictionary<string, object> options = null)
         {
             var client = ClientManager.GetClient(config.Endpoints.LLMEndpoint);
-            var messages = new List<object>
-            {
-                new { role = "user", content = prompt }
-            };
 
             var request = new RestRequest(Method.Post)
                 .AddHeader("Authorization", $"Bearer {config.ApiKey}");
+
+            int taskID = (int)(options?["TaskID"] ?? 0);
 
             if (options != null && options.TryGetValue("jsonFilePath", out var jsonFilePathObj) && jsonFilePathObj is string jsonFilePath)
             {
@@ -113,16 +110,25 @@ namespace Tizen.AIAvatar
                 if (File.Exists(jsonFilePath))
                 {
                     var jsonContent = await File.ReadAllTextAsync(jsonFilePath).ConfigureAwait(false);
-                    request.AddJsonStringBody(jsonContent);
+                    Prompt prompt = JsonSerializer.Deserialize<Prompt>(jsonContent);
+                    var msg = prompt.messages.Last();
+                    msg.content = String.Format(msg.content, message);
+
+                    request.AddJsonBody(prompt);
                 }
                 else
                 {
-                    ResponseHandler?.Invoke(this, new llmResponseEventArgs { Error = $"File not found: {jsonFilePath}" });
+                    ResponseHandler?.Invoke(this, new llmResponseEventArgs { TaskID = taskID, Error = $"File not found: {jsonFilePath}" });
                     return;
                 }
             }
             else
             {
+
+                var messages = new List<object>
+                {
+                    new { role = "user", content = message }
+                };
                 // Add the default body if no JSON file is provided
                 request.AddJsonBody(new
                 {
@@ -136,14 +142,14 @@ namespace Tizen.AIAvatar
             var response = await client.ExecuteAsync(request).ConfigureAwait(false);
             if (!response.IsSuccessful)
             {
-                ResponseHandler?.Invoke(this, new llmResponseEventArgs { Error = response.ErrorMessage });
+                ResponseHandler?.Invoke(this, new llmResponseEventArgs { TaskID = taskID, Error = response.ErrorMessage });
                 return;
             }
 
             var jsonResponse = JsonSerializer.Deserialize<JsonElement>(response.Content);
             string content = jsonResponse.GetProperty("response").GetProperty("content").GetString();
 
-            ResponseHandler?.Invoke(this, new llmResponseEventArgs { Text = content });
+            ResponseHandler?.Invoke(this, new llmResponseEventArgs { TaskID = taskID, Text = content });
         }
 
         public async Task<byte[]> TextToSpeechAsync(

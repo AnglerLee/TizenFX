@@ -15,11 +15,10 @@
  *
  */
 
-using Newtonsoft.Json;
-
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Text.Json;
 
 namespace Tizen.AIAvatar.NUI
 {
@@ -41,22 +40,25 @@ namespace Tizen.AIAvatar.NUI
                 using (StreamReader v = new StreamReader(visemeDefinitionPath))
                 {
                     var jsonString = v.ReadToEnd();
-                    visemeData = JsonConvert.DeserializeObject<VisemeData>(jsonString);
-                    visemeMap = visemeData.GetVisemeMap();
+
+                    try
+                    {
+                        visemeData = JsonSerializer.Deserialize<VisemeData>(jsonString);
+                        visemeMap = visemeData.GetVisemeMap();
+                    }catch (JsonException e)
+                    {
+                        Log.Error("Tizen.AIAvatar", e.Message);
+                    }
                 }
 
                 var nodeNames = visemeData.visemeParameters.nodeNames;
                 var blendShapeCounts = visemeData.visemeParameters.blendShapeCount;
                 var blendShapeKeyFormat = visemeData.visemeParameters.keyFormat;
 
-                lipData = new LipData(nodeNames,
-                                         blendShapeCounts,
+                lipData = new LipData(nodeNames.ToArray(),
+                                         blendShapeCounts.ToArray(),
                                          blendShapeKeyFormat);
                 isInitialized = true;
-            }
-            catch (JsonSerializationException e)
-            {
-                throw new ArgumentException("Invalid JSON format", e);
             }
             catch (FileNotFoundException e)
             {

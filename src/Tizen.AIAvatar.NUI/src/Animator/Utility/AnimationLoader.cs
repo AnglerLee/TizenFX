@@ -17,10 +17,10 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Security;
-using Newtonsoft.Json;
 using System;
 using Tizen.NUI.Scene3D;
 using Tizen.NUI;
+using System.Text.Json;
 
 namespace Tizen.AIAvatar.NUI
 {
@@ -112,7 +112,7 @@ namespace Tizen.AIAvatar.NUI
             {
                 string fileName = global::System.IO.Path.GetFileNameWithoutExtension(resourcePath);
                 string json = File.ReadAllText(resourcePath);
-                var faceAnimationData = JsonConvert.DeserializeObject<FaceAnimationData>(json);
+                var faceAnimationData = JsonSerializer.Deserialize<FaceAnimationData>(json);
                 var motionData = CreateFacialMotionData(faceAnimationData);
                 return new MotionInfo(motionData, fileName);
             }

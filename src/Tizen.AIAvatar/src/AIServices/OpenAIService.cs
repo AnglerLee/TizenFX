@@ -56,12 +56,12 @@ namespace Tizen.AIAvatar
             this.config = config;
         }
 
-        public async Task GenerateTextAsync(string prompt, Dictionary<string, object> options = null)
+        public async Task GenerateTextAsync(string message, Dictionary<string, object> options = null)
         {
             var client = ClientManager.GetClient(config.Endpoints.LLMEndpoint);
             var messages = new List<object>
         {
-            new { role = "user", content = prompt }
+            new { role = "user", content = message }
         };
 
             var request = new RestRequest("completions", Method.Post)

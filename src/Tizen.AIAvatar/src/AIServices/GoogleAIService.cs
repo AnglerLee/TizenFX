@@ -67,7 +67,7 @@ namespace Tizen.AIAvatar
             this.config = config;
         }
 
-        public async Task GenerateTextAsync(string prompt, Dictionary<string, object> options = null)
+        public async Task GenerateTextAsync(string message, Dictionary<string, object> options = null)
         {
             // API 키가 포함된 전체 URL을 baseUrl로 사용
             var fullUrl = $"{config.Endpoints.LLMEndpoint}{config.Model}:generateContent?key={config.ApiKey}";
@@ -84,7 +84,7 @@ namespace Tizen.AIAvatar
                         role = "user",
                         parts = new[]
                         {
-                            new { text = prompt }
+                            new { text = message }
                         }
                     }
                     },

@@ -17,15 +17,24 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Text.Json.Serialization;
 
 namespace Tizen.AIAvatar.NUI
 {
     internal class VisemeData
     {
-        public VisemeParameters visemeParameters;
-        public Viseme[] visemes;
+        [JsonPropertyName("visemeParameters")]
+        public VisemeParameters visemeParameters { get; set; }
 
-        public VisemeData() { }
+        [JsonPropertyName("visemes")]
+        public List<Viseme> visemes { get; set; }
+
+        public VisemeData()
+        {
+            visemeParameters = new VisemeParameters();
+            visemes = new List<Viseme>();
+        }
 
         public Dictionary<string, BlendShapeValue[]> GetVisemeMap()
         {
@@ -36,7 +45,7 @@ namespace Tizen.AIAvatar.NUI
             {
                 if (!visemeMap.ContainsKey(viseme.name))
                 {
-                    visemeMap.Add(viseme.name, viseme.values);
+                    visemeMap.Add(viseme.name, viseme.values.Select(v => new BlendShapeValue { nodeName = v.nodeName, id = v.id, value = (float)v.value }).ToArray());
                 }
             }
 
@@ -46,29 +55,38 @@ namespace Tizen.AIAvatar.NUI
 
     internal class VisemeParameters
     {
-        public string keyFormat;
-        public string[] nodeNames;
-        public int[] blendShapeCount;
+        [JsonPropertyName("keyFormat")]
+        public string keyFormat { get; set; }
 
-        public VisemeParameters(string keyFormat, string[] nodeNames, int[] blendShapeCount)
-        {
-            this.keyFormat = keyFormat;
-            this.nodeNames = nodeNames;
-            this.blendShapeCount = blendShapeCount;
-        }
+        [JsonPropertyName("nodeNames")]
+        public List<string> nodeNames { get; set; }
+
+        [JsonPropertyName("blendShapeCount")]
+        public List<int> blendShapeCount { get; set; }
     }
 
     internal class Viseme
     {
-        public string name;
-        public string symbol;
-        public BlendShapeValue[] values;
+        [JsonPropertyName("name")]
+        public string name { get; set; }
+
+        [JsonPropertyName("symbol")]
+        public string symbol { get; set; }
+
+        [JsonPropertyName("values")]
+        public List<BlendShapeValue> values { get; set; }
     }
+
 
     internal class BlendShapeValue
     {
-        public string nodeName;
-        public int id;
-        public float value;
+        [JsonPropertyName("nodeName")]
+        public string nodeName { get; set; }
+
+        [JsonPropertyName("id")]
+        public int id { get; set; }
+
+        [JsonPropertyName("value")]
+        public float value { get; set; }
     }
 }

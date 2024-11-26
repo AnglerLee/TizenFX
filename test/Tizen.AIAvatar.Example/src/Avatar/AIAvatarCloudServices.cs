@@ -33,7 +33,7 @@ namespace AIAvatar
             };
 
             samsungAIService = new SamsungAIService(samsungAIConfig);
-            samsungAIService.ResponseHandler += HandleResponse;
+            samsungAIService.ResponseHandler += OnResponseReceived;
 
             samsungAIService.OnTtsStart += OnTtsStart;
             samsungAIService.OnTtsReceiving += OnTtsReceiving;
@@ -50,7 +50,7 @@ namespace AIAvatar
         private void TestSamsungTextGeneration(SamsungAIService samsungAIService)
         {
             var task = Task.Run(async () =>
-            {
+            {                
                 await samsungAIService.GenerateTextAsync(Utils.TTSText);
             });
 
@@ -190,8 +190,9 @@ namespace AIAvatar
         }
         #endregion
 
-        private void HandleResponse(object sender, llmResponseEventArgs e)
+        private void OnResponseReceived(object sender, llmResponseEventArgs e)
         {
+
             if (e.Error != null)
             {
                 TestSamsungTTS(e.Error);
@@ -199,8 +200,24 @@ namespace AIAvatar
                 return;
             }
 
-            TestSamsungTTS(e.Text);
-            Log.Info(Utils.LogTag, $"Response: {e.Text}");
+
+            switch (e.TaskID)
+            {
+                case 0:
+                    var task = Task.Run(async () =>
+                    {
+                        var options = new Dictionary<string, object> { { "jsonFilePath", Utils.ResourcePath + "/Intelligence/LLM/emotion1B.json" }, {"TaskID", 1 } };
+                        await samsungAIService.GenerateTextAsync(e.Text, options);
+                    });
+                    TestSamsungTTS(e.Text);
+                    Log.Info(Utils.LogTag, $"Response[0]: {e.Text}");
+                    break;
+                case 1:
+                    
+                    Log.Info(Utils.LogTag, $"Response[1]: {e.Text}");
+                    break;
+            }           
+            
         }
 
         private void OnTtsStart(object sender, ttsStreamingEventArgs e)

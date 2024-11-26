@@ -30,7 +30,8 @@ namespace Tizen.AIAvatar
     }
 
     public class llmResponseEventArgs : EventArgs
-    {     
+    {
+        public int TaskID { get; set; }
         public string Text { get; set; }
         public string Error { get; set; }
     }
