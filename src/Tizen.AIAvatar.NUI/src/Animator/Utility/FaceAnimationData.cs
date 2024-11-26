@@ -15,6 +15,7 @@
  */
 
 using System.Collections.Generic;
+using System.Linq.Expressions;
 
 namespace Tizen.AIAvatar.NUI
 {
@@ -37,6 +38,25 @@ namespace Tizen.AIAvatar.NUI
         public List<List<float>> key { get; set; }
     }
 
+
+    internal class Expression
+    {
+        public string name { get; set; }
+        public List<string> filename { get; set; }
+    }
+
+    internal class IgnoreBlendShape
+    {
+        public string name { get; set; }
+        public List<string> morphname { get; set; }
+    }
+
+
+    internal class EmotionConfig
+    {
+        public List<Expression> expressions { get; set; }
+        public List<IgnoreBlendShape> ignoreBlendShapes { get; set; }
+    }
 
 
 }

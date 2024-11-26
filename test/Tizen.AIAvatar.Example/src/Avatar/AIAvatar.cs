@@ -50,6 +50,12 @@ namespace AIAvatar
 
         private void LoadResources()
         {
+            LoadAnimationResource();
+            LoadAudioResource();
+        }
+
+        private void LoadAnimationResource()
+        {
             try
             {
                 faceMotions.AddRange(
@@ -66,10 +72,9 @@ namespace AIAvatar
             }
             catch (Exception e)
             {
-                Log.Error(Utils.LogTag, $"LoadResource : {e.Message}");
+                Log.Error(Utils.LogTag, $"LoadAnimationResource : {e.Message}");
             }
 
-            LoadAudioResource();
         }
 
         private void LoadAudioResource()

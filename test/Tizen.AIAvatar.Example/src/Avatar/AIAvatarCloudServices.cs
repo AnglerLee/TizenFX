@@ -242,7 +242,7 @@ namespace AIAvatar
             Animation lipAnimation = lipSyncer.GenerateAnimationFromVowels(predictVowels, 0.08f, true);
             lipSyncer.Enqueue(lipAnimation);
 
-            Log.Info(Utils.LogTag, string.Join(", ", predictVowels));
+            //Log.Info(Utils.LogTag, string.Join(", ", predictVowels));
         }
 
         private void OnTtsFinish(object sender, ttsStreamingEventArgs e)

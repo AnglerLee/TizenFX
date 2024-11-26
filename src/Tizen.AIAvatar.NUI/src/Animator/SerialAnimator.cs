@@ -16,7 +16,6 @@
  */
 
 using System;
-using Tizen.NUI;
 
 namespace Tizen.AIAvatar.NUI
 {

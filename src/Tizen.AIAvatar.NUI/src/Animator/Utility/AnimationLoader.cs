@@ -21,6 +21,8 @@ using System;
 using Tizen.NUI.Scene3D;
 using Tizen.NUI;
 using System.Text.Json;
+using System.Linq;
+using System.Xml.Linq;
 
 namespace Tizen.AIAvatar.NUI
 {
@@ -156,7 +158,7 @@ namespace Tizen.AIAvatar.NUI
         }
 
       
-        private MotionData CreateFacialMotionData(FaceAnimationData facialAnimation)
+        internal MotionData CreateFacialMotionData(FaceAnimationData facialAnimation, List<IgnoreBlendShape> ignoreBlendShapes = null)
         {
 
             int frames = facialAnimation.frames;
@@ -170,9 +172,13 @@ namespace Tizen.AIAvatar.NUI
             foreach (var blendshape in facialAnimation.blendShapes)
             {
                 using var modelNodeID = new PropertyKey(blendshape.name);
-               
+                IgnoreBlendShape ignoreBS = ignoreBlendShapes?.FirstOrDefault(x => x.name == blendshape.name);
+
+
                 for (int target = 0; target < blendshape.morphtarget; target++)
-                {   
+                {
+                    if (ignoreBS != null && ignoreBS.morphname.Contains(blendshape.morphname[target])) continue;
+
                     using var keyFrames = new KeyFrames();
                     using var blendShapeID = new PropertyKey(blendshape.morphname[target]);
                     using var blendshapeIndex = new BlendShapeIndex(modelNodeID, blendShapeID);
