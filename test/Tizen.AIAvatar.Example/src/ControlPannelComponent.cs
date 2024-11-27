@@ -226,6 +226,7 @@ namespace AIAvatar
             AddControlButton("ChangeAvatar", "button_avatar", mainScene.ChangeAvatar);
             AddControlButton("Random Animation", "button_bvh", mainScene.AIAvatar.PlayRandomBodyAnimation);
             AddControlButton("Random Face Animations", "button_bvh", mainScene.AIAvatar.PlayMultipleFacialAnimations);
+            AddControlButton("Random Face Expression", "button_bvh", mainScene.AIAvatar.PlayExpressionAniatmion);
             AddControlButton("Lip Animation", "button_bvh", mainScene.AIAvatar.PlayLipSync);
             AddControlButton("Stream Lip Animation", "button_bvh", mainScene.AIAvatar.PlayStreamingLipSync);
             AddControlButton("Audio & LipSync", "button_bvh", mainScene.AIAvatar.PlayAudioLipSync);

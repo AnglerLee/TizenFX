@@ -21,6 +21,7 @@ namespace AIAvatar
 
         private SerialAnimator bodyAnimator = new SerialAnimator();
         private ParallelAnimator faceAnimator = new ParallelAnimator();
+        private EmotionAnimator emotionAnimator = new EmotionAnimator();
 
         private List<MotionInfo> faceMotions = new List<MotionInfo>();
         private List<MotionInfo> bodyMotions = new List<MotionInfo>();
@@ -69,6 +70,8 @@ namespace AIAvatar
                         new Vector3(0.01f, 0.01f, 0.01f)
                         )
                     );
+
+                emotionAnimator.LoadEmotionConfig(Utils.ResourcePath + "/Intelligence/LLM/emoji_emotion_config.json", Utils.ResourcePath + "/Model/Animation/Expression");
             }
             catch (Exception e)
             {
@@ -91,6 +94,7 @@ namespace AIAvatar
             InitializeBodyAnimations();
             InitializeFaceAnimations();
             InitializeCustomAnimations();
+            InitializeEmotionAnimations();
 
             InitializeAudioPlayer();
 
@@ -124,6 +128,25 @@ namespace AIAvatar
             catch (Exception ex)
             {
                 Log.Error(Utils.LogTag, "An unexpected exception occurred: " + ex.Message);
+            }
+        }
+
+        public void PlayExpressionAniatmion()
+        {
+            List<string> emotions = new List<string> { "joy", "trust", "fear", "surprise", "sadness", "disgust", "anger", "anticipation", "normal", "garbage" };
+
+            Random random = new Random();
+            int index = random.Next(emotions.Count);
+            string emotion = emotions[index];
+
+            Log.Info(Utils.LogTag, $"PlayEmotion : {emotion}");
+            try
+            {
+                emotionAnimator.Play(emotion);
+            }
+            catch (Exception ex)
+            {
+                Log.Error(Utils.LogTag, "emotionAnimator: " + ex.Message);
             }
         }
 
@@ -218,6 +241,19 @@ namespace AIAvatar
             catch (Exception e)
             {
                 Log.Error(Utils.LogTag, $"InitializeFaceAnimations : {e.Message}");
+            }
+        }
+
+        private void InitializeEmotionAnimations()
+        {
+            try
+            {
+                emotionAnimator.GenerateExpressionDataAnimation(this);
+                emotionAnimator.AnimatorStateChanged += OnAnimationStateChanged;
+            }
+            catch (Exception e)
+            {
+                Log.Error(Utils.LogTag, $"InitializeEmotionAnimations : {e.Message}");
             }
         }
 
