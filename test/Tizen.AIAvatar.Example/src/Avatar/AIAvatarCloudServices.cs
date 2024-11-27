@@ -28,7 +28,7 @@ namespace AIAvatar
         {
             samsungAIConfig = new SamsungAIConfiguration
             {
-                ApiKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiY2xzOW91Mmh4MDAwNzAxOXZ1ZTYxYjBmeSIsInVzZXJuYW1lIjoiZGlnaXRhbC1odW1hbiIsInJvbGUiOiJ1c2VyIn0.CZ0mrDu1RqWIl_hFkVJd-e_yfMxUgDKVsTyTDRerBLU",
+                ApiKey = "API_KEY",
                 Model = "chat-65b-32k-1.1.2"
             };
 
