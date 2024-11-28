@@ -22,15 +22,28 @@ using System.Threading.Tasks;
 
 namespace Tizen.AIAvatar
 {
+    /// <summary>
+    /// A class that provides methods to execute REST requests and handle responses.
+    /// </summary>
     public class RestClient : IRestClient
     {
         private readonly HttpClient _httpClient;
 
+        /// <summary>
+        /// Initializes a new instance of the RestClient class with the specified HttpClient.
+        /// </summary>
+        /// <param name="httpClient">The HttpClient instance to use for sending HTTP requests.</param>
         public RestClient(HttpClient httpClient)
         {
             _httpClient = httpClient;
         }
 
+        /// <summary>
+        /// Executes a REST request asynchronously and returns the response.
+        /// </summary>
+        /// <param name="request">The RestRequest object containing details of the request.</param>
+        /// <returns>A RestResponse object representing the result of the request.</returns>
+        /// <exception cref="Exception">Thrown when an error occurs during the request execution.</exception>
         public async Task<RestResponse> ExecuteAsync(RestRequest request)
         {
             using var httpRequest = request.CreateRequestMessage(_httpClient.BaseAddress);
@@ -67,6 +80,9 @@ namespace Tizen.AIAvatar
             }
         }
 
+        /// <summary>
+        /// Disposes of the resources used by the RestClient.
+        /// </summary>
         public void Dispose()
         {
             _httpClient?.Dispose();

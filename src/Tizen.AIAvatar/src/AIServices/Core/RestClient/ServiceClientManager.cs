@@ -22,17 +22,28 @@ using System.Net.Http;
 
 namespace Tizen.AIAvatar
 {
-
+    /// <summary>
+    /// Manages REST clients for different endpoints based on the AI service configuration.
+    /// </summary>
     public class ServiceClientManager : IDisposable
     {
         private readonly Dictionary<string, IRestClient> _clients = new();
         private readonly AIServiceConfiguration _config;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ServiceClientManager"/> class.
+        /// </summary>
+        /// <param name="config">The AI service configuration.</param>
         public ServiceClientManager(AIServiceConfiguration config)
         {
             _config = config;
         }
 
+        /// <summary>
+        /// Retrieves or creates a REST client for the specified endpoint.
+        /// </summary>
+        /// <param name="endpoint">The base URI of the endpoint.</param>
+        /// <returns>The REST client for the specified endpoint.</returns>
         public IRestClient GetClient(string endpoint)
         {
             if (!_clients.ContainsKey(endpoint))
@@ -46,6 +57,9 @@ namespace Tizen.AIAvatar
             return _clients[endpoint];
         }
 
+        /// <summary>
+        /// Releases all resources used by the <see cref="ServiceClientManager"/>.
+        /// </summary>
         public void Dispose()
         {
             foreach (var client in _clients.Values)
@@ -55,5 +69,4 @@ namespace Tizen.AIAvatar
             _clients.Clear();
         }
     }
-
 }

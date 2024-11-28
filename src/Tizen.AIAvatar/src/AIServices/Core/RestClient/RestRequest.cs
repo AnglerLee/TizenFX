@@ -24,23 +24,46 @@ using System.Text.Json.Serialization;
 
 namespace Tizen.AIAvatar
 {
-
+    /// <summary>
+    /// An enumeration representing various HTTP methods.
+    /// </summary>
     public enum Method
     {
+        /// <summary>
+        /// Represents the HTTP GET method.
+        /// </summary>
         Get,
+
+        /// <summary>
+        /// Represents the HTTP POST method.
+        /// </summary>
         Post,
+
+        /// <summary>
+        /// Represents the HTTP PUT method.
+        /// </summary>
         Put,
+
+        /// <summary>
+        /// Represents the HTTP DELETE method.
+        /// </summary>
         Delete,
+
+        /// <summary>
+        /// Represents the HTTP PATCH method.
+        /// </summary>
         Patch
     }
+
+    /// <summary>
+    /// Represents a RESTful API request.
+    /// </summary>
     public class RestRequest
     {
-        public string Resource { get; }
-        public Method Method { get; }
-        private readonly Dictionary<string, string> _headers;
-        private object _body;
-        private string _jsonStringBody;
-
+        /// <summary>
+        /// Initializes a new instance of the RestRequest class with the specified HTTP method.
+        /// </summary>
+        /// <param name="method">The HTTP method to use for the request.</param>
         public RestRequest(Method method)
         {
             Resource = string.Empty;
@@ -48,6 +71,11 @@ namespace Tizen.AIAvatar
             _headers = new Dictionary<string, string>();
         }
 
+        /// <summary>
+        /// Initializes a new instance of the RestRequest class with the specified resource and HTTP method.
+        /// </summary>
+        /// <param name="resource">The resource URI for the request.</param>
+        /// <param name="method">The HTTP method to use for the request.</param>
         public RestRequest(string resource, Method method)
         {
             Resource = resource;
@@ -55,12 +83,23 @@ namespace Tizen.AIAvatar
             _headers = new Dictionary<string, string>();
         }
 
+        /// <summary>
+        /// Adds a header to the request.
+        /// </summary>
+        /// <param name="name">The name of the header.</param>
+        /// <param name="value">The value of the header.</param>
+        /// <returns>The current instance of RestRequest.</returns>
         public RestRequest AddHeader(string name, string value)
         {
             _headers[name] = value;
             return this;
         }
 
+        /// <summary>
+        /// Adds a JSON body to the request.
+        /// </summary>
+        /// <param name="body">The object to serialize as JSON and include in the request body.</param>
+        /// <returns>The current instance of RestRequest.</returns>
         public RestRequest AddJsonBody(object body)
         {
             _body = body;
@@ -72,6 +111,11 @@ namespace Tizen.AIAvatar
             return this;
         }
 
+        /// <summary>
+        /// Adds a JSON string body to the request.
+        /// </summary>
+        /// <param name="jsonString">The JSON string to include in the request body.</param>
+        /// <returns>The current instance of RestRequest.</returns>
         public RestRequest AddJsonStringBody(string jsonString)
         {
             _jsonStringBody = jsonString;
@@ -83,12 +127,15 @@ namespace Tizen.AIAvatar
             return this;
         }
 
+        /// <summary>
+        /// Creates an HttpRequestMessage based on the current RestRequest instance.
+        /// </summary>
+        /// <param name="baseAddress">The base address to use when constructing the request URI.</param>
+        /// <returns>A new HttpRequestMessage representing the current RestRequest.</returns>
         internal HttpRequestMessage CreateRequestMessage(Uri baseAddress)
         {
-            // Resource가 비어있으면 baseAddress만 사용
-            var requestUri = string.IsNullOrEmpty(Resource)
-                ? baseAddress
-                : new Uri(baseAddress, Resource);
+            // If Resource is empty, use only the baseAddress
+            var requestUri = string.IsNullOrEmpty(Resource) ? baseAddress : new Uri(baseAddress, Resource);
 
             var request = new HttpRequestMessage(GetHttpMethod(), requestUri);
 
@@ -110,6 +157,10 @@ namespace Tizen.AIAvatar
             return request;
         }
 
+        /// <summary>
+        /// Gets the appropriate HttpMethod for the specified Method enumeration value.
+        /// </summary>
+        /// <returns>The corresponding HttpMethod.</returns>
         private HttpMethod GetHttpMethod()
         {
             return Method switch
@@ -122,5 +173,30 @@ namespace Tizen.AIAvatar
                 _ => throw new ArgumentException($"Unsupported HTTP method: {Method}")
             };
         }
+
+        /// <summary>
+        /// The resource URI for the request.
+        /// </summary>
+        public string Resource { get; }
+
+        /// <summary>
+        /// The HTTP method to use for the request.
+        /// </summary>
+        public Method Method { get; }
+
+        /// <summary>
+        /// A dictionary containing the headers for the request.
+        /// </summary>
+        private readonly Dictionary<string, string> _headers;
+
+        /// <summary>
+        /// The object to serialize as JSON and include in the request body.
+        /// </summary>
+        private object _body;
+
+        /// <summary>
+        /// The JSON string to include in the request body.
+        /// </summary>
+        private string _jsonStringBody;
     }
 }
