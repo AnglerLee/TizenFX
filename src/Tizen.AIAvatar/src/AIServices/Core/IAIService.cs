@@ -19,20 +19,51 @@ using System;
 
 namespace Tizen.AIAvatar
 {
-
+    /// <summary>
+    /// Defines the capabilities that an AI service can support.
+    /// </summary>
     [Flags]
     public enum ServiceCapabilities
     {
+        /// <summary>
+        /// No capabilities.
+        /// </summary>
         None = 0,
+
+        /// <summary>
+        /// Capability for Text-to-Speech service.
+        /// </summary>
         TextToSpeech = 1,
+
+        /// <summary>
+        /// Capability for Speech-to-Text service.
+        /// </summary>
         SpeechToText = 2,
+
+        /// <summary>
+        /// Capability for Large Language Model service.
+        /// </summary>
         LargeLanguageModel = 4,
+
+        /// <summary>
+        /// Capability for Vision-related service.
+        /// </summary>
         Vision = 8
     }
 
+    /// <summary>
+    /// Represents a generic AI service interface.
+    /// </summary>
     public interface IAIService : IDisposable
     {
+        /// <summary>
+        /// Gets the name of the AI service.
+        /// </summary>
         string ServiceName { get; }
+
+        /// <summary>
+        /// Gets the capabilities of the AI service.
+        /// </summary>
         ServiceCapabilities Capabilities { get; }
     }
 }

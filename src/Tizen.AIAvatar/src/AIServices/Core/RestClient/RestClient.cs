@@ -64,6 +64,7 @@ namespace Tizen.AIAvatar
                 }
 
                 if (!httpResponse.IsSuccessStatusCode)
+
                 {
                     response.ErrorMessage = $"HTTP {(int)httpResponse.StatusCode} - {httpResponse.ReasonPhrase}";
                 }

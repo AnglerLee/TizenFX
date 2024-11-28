@@ -19,20 +19,44 @@ using System;
 
 namespace Tizen.AIAvatar
 {
-
+    /// <summary>
+    /// Abstract base class for AI services, providing common functionalities.
+    /// </summary>
     public abstract class BaseAIService : IAIService
     {
+        /// <summary>
+        /// Gets the name of the AI service.
+        /// </summary>
         public abstract string ServiceName { get; }
+
+        /// <summary>
+        /// Gets the capabilities of the AI service.
+        /// </summary>
         public abstract ServiceCapabilities Capabilities { get; }
+
+        /// <summary>
+        /// Gets the service client manager responsible for managing client operations.
+        /// </summary>
         protected ServiceClientManager ClientManager { get; }
+
+        /// <summary>
+        /// Gets the configuration settings for the AI service.
+        /// </summary>
         protected AIServiceConfiguration Configuration { get; }
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="BaseAIService"/> class with the specified configuration.
+        /// </summary>
+        /// <param name="config">The configuration settings for the AI service.</param>
         protected BaseAIService(AIServiceConfiguration config)
         {
             Configuration = config;
             ClientManager = new ServiceClientManager(config);
         }
 
+        /// <summary>
+        /// Releases all resources used by the AI service.
+        /// </summary>
         public virtual void Dispose()
         {
             ClientManager?.Dispose();

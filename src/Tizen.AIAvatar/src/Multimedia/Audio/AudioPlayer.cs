@@ -26,6 +26,9 @@ using static Tizen.AIAvatar.AIAvatar;
 
 namespace Tizen.AIAvatar
 {
+    /// <summary>
+    /// Represents an audio player capable of streaming and playing audio with support for audio ducking.
+    /// </summary>
     public class AudioPlayer
     {
 
@@ -48,7 +51,10 @@ namespace Tizen.AIAvatar
         internal event EventHandler<AudioPlayerChangedEventArgs> AudioPlayerStateChanged;
 
 
-
+        /// <summary>
+        /// Initializes a new instance of the <see cref="AudioPlayer"/> class.
+        /// </summary>
+        /// <param name="audioOptions">Optional audio options for playback configuration.</param>
         public AudioPlayer(AudioOptions audioOptions = null)
         {
             
@@ -79,6 +85,9 @@ namespace Tizen.AIAvatar
             AudioPlayerStateChanged += OnStateChanged;
         }
 
+        /// <summary>
+        /// Initializes the audio stream for playback.
+        /// </summary>
         public void InitializeStream()
         {
             isStreaming = true;
@@ -86,16 +95,28 @@ namespace Tizen.AIAvatar
             streamList.Clear();
         }
 
+        /// <summary>
+        /// Adds a new audio buffer to the stream list.
+        /// </summary>
+        /// <param name="buffer">The audio buffer to add.</param>
         public void AddStream(byte[] buffer)
         {
             streamList.Add(new MemoryStream(buffer));
         }
 
+        /// <summary>
+        /// Determines if the audio player is prepared with a valid stream.
+        /// </summary>
+        /// <returns>True if a valid stream is available; otherwise, false.</returns>
         public bool IsPrepare()
         {
             return streamList.Count > 0;
         }
 
+        /// <summary>
+        /// Plays the audio from the stream asynchronously.
+        /// </summary>
+        /// <param name="sampleRate">Optional sample rate for the audio playback.</param>
         public void PlayStreamAudio(int sampleRate = 0)
         {            
             InitializeStream();
@@ -117,6 +138,11 @@ namespace Tizen.AIAvatar
             }
         }
 
+        /// <summary>
+        /// Plays the provided audio buffer.
+        /// </summary>
+        /// <param name="audioBytes">The audio buffer to play.</param>
+        /// <param name="sampleRate">Optional sample rate for the audio playback.</param>
         public void Play(byte[] audioBytes, int sampleRate = 0)
         {
             isStreaming = false;
@@ -146,17 +172,26 @@ namespace Tizen.AIAvatar
             }
         }
 
+        /// <summary>
+        /// Pauses the current audio playback.
+        /// </summary>
         public void Pause()
         {
             CurrentAudioPlayerState = AudioPlayerState.Paused;
 
         }
 
+        /// <summary>
+        /// Stops the current audio playback.
+        /// </summary>
         public void Stop()
         {
             CurrentAudioPlayerState = AudioPlayerState.Stopped;
         }
 
+        /// <summary>
+        /// Destroys the audio player and clears all resources.
+        /// </summary>
         public void Destroy()
         {
             DestroyAudioPlayback();
@@ -164,6 +199,9 @@ namespace Tizen.AIAvatar
             streamList = null;
         }
 
+        /// <summary>
+        /// Gets or sets the current state of the audio player.
+        /// </summary>
         public AudioPlayerState CurrentAudioPlayerState
         {
             get => currentAudioPlayerState;
