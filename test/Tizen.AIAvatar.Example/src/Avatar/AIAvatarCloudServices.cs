@@ -5,16 +5,13 @@ using System.Threading.Tasks;
 using Tizen;
 using Tizen.AIAvatar;
 using Tizen.AIAvatar.NUI;
+using Tizen.Applications;
 using Tizen.NUI;
 using Tizen.NUI.Scene3D;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace AIAvatar
-{
-    public class MyEventArgs : EventArgs
-    {
-        public string Message { get; set; }
-    }
-
+{    
     public partial class AIAvatar : Model
     {
 
@@ -22,8 +19,7 @@ namespace AIAvatar
         private SamsungAIConfiguration samsungAIConfig;
 
         private int ttsStreamingAudioBytes = 0;
-
-
+        
         public void InitializeAIServices()
         {
             samsungAIConfig = new SamsungAIConfiguration
@@ -34,6 +30,7 @@ namespace AIAvatar
 
             samsungAIService = new SamsungAIService(samsungAIConfig);
             samsungAIService.ResponseHandler += OnResponseReceived;
+            
 
             samsungAIService.OnTtsStart += OnTtsStart;
             samsungAIService.OnTtsReceiving += OnTtsReceiving;
@@ -42,18 +39,19 @@ namespace AIAvatar
 
         public void TestSamsungAIService()
         {
-            TestSamsungTextGeneration(samsungAIService);                 
+            TestSamsungTextGeneration(samsungAIService);
+            
         }
 
         #region SamsungAI Services
+            
 
         private void TestSamsungTextGeneration(SamsungAIService samsungAIService)
         {
             var task = Task.Run(async () =>
-            {                
-                await samsungAIService.GenerateTextAsync(Utils.TTSText);
+            {
+                await samsungAIService.GenerateTextAsync(Utils.TTSText).ConfigureAwait(true);
             });
-
 
         }
 
@@ -64,7 +62,7 @@ namespace AIAvatar
                 var options = new Dictionary<string, object> {  { "voiceType", VoiceType.Female },
                                                                 { "speechRate", 1.0f } };
 
-                await samsungAIService.TextToSpeechStreamAsync(text, "en_US", options);
+                await samsungAIService.TextToSpeechStreamAsync(text, "en_US", options).ConfigureAwait(false);
             });
         }
 
@@ -95,7 +93,7 @@ namespace AIAvatar
 
         private async Task TestOpenAITextGeneration(OpenAIService openAIService)
         {
-            await openAIService.GenerateTextAsync("안녕?");
+            await openAIService.GenerateTextAsync("Hello?");
         }
 
         private async Task TestOpenAITTS(OpenAIService openAIService)
@@ -186,7 +184,7 @@ namespace AIAvatar
 
             WaveData wavData = AudioUtils.LoadWave("GoogleTTS.wav");
             string result = await googleAIService.SpeechToTextAsync(wavData.RawAudioData, stt_options);
-            Log.Info(Utils.LogTag, $"변환된 텍스트: {result}");
+            Log.Info(Utils.LogTag, $"Text: {result}");
         }
         #endregion
 
@@ -200,21 +198,20 @@ namespace AIAvatar
                 return;
             }
 
-
             switch (e.TaskID)
             {
                 case 0:
                     var task = Task.Run(async () =>
                     {
-                        var options = new Dictionary<string, object> { { "jsonFilePath", Utils.ResourcePath + "/Intelligence/LLM/emotion1B.json" }, {"TaskID", 1 } };
-                        await samsungAIService.GenerateTextAsync(e.Text, options);
-                    });
-                    TestSamsungTTS(e.Text);
-
+                        var options = new Dictionary<string, object> { { "promptFilePath", Utils.ResourcePath + "/Intelligence/LLM/emotion1B.json" }, {"TaskID", 1 } };
+                        await samsungAIService.GenerateTextAsync(e.Text, options).ConfigureAwait(false);
+                    }).ContinueWith(t => TestSamsungTTS(e.Text));
+                    
                     Log.Info(Utils.LogTag, $"Response[0]: {e.Text}");
                     break;
                 case 1:
-                    
+                    emotionAnimator.Play(e.Text);
+                    PlayRandomBodyAnimation();
                     Log.Info(Utils.LogTag, $"Response[1]: {e.Text}");
                     break;
             }           
@@ -242,8 +239,6 @@ namespace AIAvatar
 
             Animation lipAnimation = lipSyncer.GenerateAnimationFromVowels(predictVowels, 0.08f, true);
             lipSyncer.Enqueue(lipAnimation);
-
-            //Log.Info(Utils.LogTag, string.Join(", ", predictVowels));
         }
 
         private void OnTtsFinish(object sender, ttsStreamingEventArgs e)

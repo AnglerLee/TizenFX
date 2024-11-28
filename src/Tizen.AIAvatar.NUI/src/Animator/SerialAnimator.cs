@@ -16,6 +16,7 @@
  */
 
 using System;
+using Tizen.Applications;
 
 namespace Tizen.AIAvatar.NUI
 {
@@ -25,6 +26,14 @@ namespace Tizen.AIAvatar.NUI
     public class SerialAnimator : AnimatorBase
     {
         private uint playIndex;
+
+        private void PlayMainThreadAnimation()
+        {
+            animations[playIndex].Finished += OnAnimationFinished;
+            animations[playIndex].Play();
+
+            ChangeAnimatorState(AnimatorState.Playing, GetNameByIndex(playIndex));
+        }
 
         /// <summary>
         /// Plays the animation corresponding to the specified index.
@@ -41,10 +50,7 @@ namespace Tizen.AIAvatar.NUI
             }
 
             playIndex = index;
-            animations[index].Finished += OnAnimationFinished;
-            animations[index].Play();
-
-            ChangeAnimatorState(AnimatorState.Playing, GetNameByIndex(index));
+            CoreApplication.Post(PlayMainThreadAnimation);
         }
 
         /// <summary>

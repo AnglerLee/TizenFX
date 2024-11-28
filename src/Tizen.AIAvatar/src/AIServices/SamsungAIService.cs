@@ -65,7 +65,7 @@ namespace Tizen.AIAvatar
         
 
         public event EventHandler<llmResponseEventArgs> ResponseHandler;
-
+        
         public event EventHandler<ttsStreamingEventArgs> OnTtsStart;
         public event EventHandler<ttsStreamingEventArgs> OnTtsReceiving;
         public event EventHandler<ttsStreamingEventArgs> OnTtsFinish;
@@ -104,7 +104,7 @@ namespace Tizen.AIAvatar
 
             int taskID = (int)(options?["TaskID"] ?? 0);
 
-            if (options != null && options.TryGetValue("jsonFilePath", out var jsonFilePathObj) && jsonFilePathObj is string jsonFilePath)
+            if (options != null && options.TryGetValue("promptFilePath", out var jsonFilePathObj) && jsonFilePathObj is string jsonFilePath)
             {
                 // Read JSON file content
                 if (File.Exists(jsonFilePath))

@@ -21,14 +21,6 @@ using System.Collections.Generic;
 
 namespace Tizen.AIAvatar
 {
-    public class AIServiceResponse<T>
-    {
-        public bool Success { get; set; }
-        public T Data { get; set; }
-        public string ErrorMessage { get; set; }
-        public Dictionary<string, object> Metadata { get; set; } = new();
-    }
-
     public class llmResponseEventArgs : EventArgs
     {
         public int TaskID { get; set; }
