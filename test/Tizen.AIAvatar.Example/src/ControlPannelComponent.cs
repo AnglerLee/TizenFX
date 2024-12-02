@@ -224,17 +224,15 @@ namespace AIAvatar
         {
             AddControlEditor();
             AddControlButton("ChangeAvatar", "button_avatar", mainScene.ChangeAvatar);
-            AddControlButton("Random Animation", "button_bvh", mainScene.AIAvatar.PlayRandomBodyAnimation);
-            AddControlButton("Random Face Animations", "button_bvh", mainScene.AIAvatar.PlayMultipleFacialAnimations);
-            AddControlButton("Random Face Expression", "button_bvh", mainScene.AIAvatar.PlayExpressionAniatmion);
-            AddControlButton("Lip Animation", "button_bvh", mainScene.AIAvatar.PlayLipSync);
-            AddControlButton("Stream Lip Animation", "button_bvh", mainScene.AIAvatar.PlayStreamingLipSync);
-            AddControlButton("Audio & LipSync", "button_bvh", mainScene.AIAvatar.PlayAudioLipSync);
-            AddControlButton("Streaming Audio & LipSync", "button_bvh", mainScene.AIAvatar.PlayAudioLipSyncStream);
-            AddControlButton("Samsung AI (chat)", "button_avatar", mainScene.AIAvatar.TestSamsungAIService);
-            AddControlButton("Pause", "button_bvh", mainScene.AIAvatar.PauseAnimations);
-            AddControlButton("Stop", "button_bvh", mainScene.AIAvatar.StopAnimations);
-            AddControlButton("EyeBlink", "button_bvh", mainScene.AIAvatar.StartEyeBlink);
+            AddControlButton("Random Animation", "button_bvh", mainScene.TriggerRandomBodyAnimation);
+            AddControlButton("Multiple Face Animations", "button_bvh", mainScene.TriggerMultipleFacialAnimations);
+            AddControlButton("Random Face Expression", "button_bvh", mainScene.TriggerExpressionAniatmion);
+            AddControlButton("Lip Animation", "button_bvh", mainScene.TriggerLipSync);
+            AddControlButton("Audio & LipSync", "button_bvh", mainScene.TriggerAudioLipSync);
+            AddControlButton("Samsung AI (chat)", "button_avatar", mainScene.TriggerSamsungAIService);
+            AddControlButton("Pause", "button_bvh", mainScene.TriggerPauseAnimations);
+            AddControlButton("Stop", "button_bvh", mainScene.TriggerStopAnimations);
+            AddControlButton("EyeBlink", "button_bvh", mainScene.TriggerEyeBlink);
             AddControlButton("Show/Hide", "button_bvh", mainScene.ShowHide);
             AddControlSlider("Camera FOV", "slider_camera_fov", 0.1f, 1.3f, mainScene.GetSelectedCamera().FieldOfView.ConvertToFloat(), mainScene.SetupSceneViewCameraFov);
             AddControlSlider("IBL intensity", "slider_ibl_factor", 0.1f, 0.8f, mainScene.IBLFactor, mainScene.SetupSceneViewIBLFactor);

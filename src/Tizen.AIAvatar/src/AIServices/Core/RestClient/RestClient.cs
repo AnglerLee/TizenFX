@@ -46,7 +46,7 @@ namespace Tizen.AIAvatar
         /// <exception cref="Exception">Thrown when an error occurs during the request execution.</exception>
         public async Task<RestResponse> ExecuteAsync(RestRequest request)
         {
-            using var httpRequest = request.CreateRequestMessage(_httpClient.BaseAddress);
+            using var httpRequest = request?.CreateRequestMessage(_httpClient.BaseAddress);
 
             try
             {

@@ -29,7 +29,7 @@ namespace Tizen.AIAvatar
     /// <summary>
     /// Represents an audio player capable of streaming and playing audio with support for audio ducking.
     /// </summary>
-    public class AudioPlayer
+    public class AudioPlayer : IDisposable
     {
 
         private int accLength = 0;
@@ -57,13 +57,13 @@ namespace Tizen.AIAvatar
         /// <param name="audioOptions">Optional audio options for playback configuration.</param>
         public AudioPlayer(AudioOptions audioOptions = null)
         {
-            
+
             if (audioOptions == null)
                 CurrentAudioOptions = DefaultAudioOptions;
             else
                 CurrentAudioOptions = audioOptions;
 
-            
+
             baseAudioStream = new MemoryStream();
             streamList = new List<MemoryStream>();
 
@@ -118,7 +118,7 @@ namespace Tizen.AIAvatar
         /// </summary>
         /// <param name="sampleRate">Optional sample rate for the audio playback.</param>
         public void PlayStreamAudio(int sampleRate = 0)
-        {            
+        {
             InitializeStream();
 
             if (audioPlayback == null || audioPlayback.SampleRate != sampleRate)
@@ -200,6 +200,74 @@ namespace Tizen.AIAvatar
         }
 
         /// <summary>
+        /// Releases all resources used by the AudioPlayer.
+        /// </summary>
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        /// <summary>
+        /// Releases all resources used by the AudioPlayer.
+        /// </summary>
+        protected virtual void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                if (bufferChecker != null)
+                {
+                    bufferChecker.Stop();
+                    bufferChecker.Dispose();
+                    bufferChecker = null;
+                }
+
+                if (audioDucking != null)
+                {
+                    audioDucking.DuckingStateChanged -= (sender, arg) =>
+                    {
+                        if (arg.IsDucked)
+                        {
+                            CurrentAudioPlayerState = AudioPlayerState.Playing;
+                        }
+                    };
+                    audioDucking.Dispose();
+                    audioDucking = null;
+                }
+
+                if (audioPlayback != null)
+                {
+                    Stop();
+                    audioPlayback.BufferAvailable -= OnBufferAvailable;
+                    audioPlayback.Dispose();
+                    audioPlayback = null;
+                }
+
+                if (audioStreamPolicy != null)
+                {
+                    audioStreamPolicy.Dispose();
+                    audioStreamPolicy = null;
+                }
+
+                if (baseAudioStream != null)
+                {
+                    baseAudioStream.Dispose();
+                    baseAudioStream = null;
+                }
+
+                if (streamList != null)
+                {
+                    foreach (var stream in streamList)
+                    {
+                        stream.Dispose();
+                    }
+                    streamList.Clear();
+                    streamList = null;
+                }
+            }
+        }
+
+        /// <summary>
         /// Gets or sets the current state of the audio player.
         /// </summary>
         public AudioPlayerState CurrentAudioPlayerState
@@ -239,21 +307,30 @@ namespace Tizen.AIAvatar
 
         private void OnStateChanged(object sender, AudioPlayerChangedEventArgs state)
         {
-            try
-            {
-                switch (state.Current)
-                {
-                    case AudioPlayerState.Playing:
-                        Log.Debug(LogTag, "Audio is playing.");
 
+            switch (state.Current)
+            {
+                case AudioPlayerState.Playing:
+                    try
+                    {
                         bufferChecker?.Start();
                         audioPlayback?.Prepare();
+                        Log.Debug(LogTag, "Audio is playing.");
+                    }
+                    catch (NullReferenceException e)
+                    {
+                        Log.Error(LogTag, $"NullReferenceException in Playing state: {e.Message}");
+                    }
+                    catch (Exception e)
+                    {
+                        Log.Info(LogTag, $"PlayinnState: {e.Message}");
+                    }
 
-                        break;
+                    break;
 
-                    case AudioPlayerState.Paused:
-                        Log.Debug(LogTag, "Audio is paused.");
-
+                case AudioPlayerState.Paused:
+                    try
+                    {
                         bufferChecker?.Stop();
                         audioPlayback?.Pause();
                         audioPlayback?.Unprepare();
@@ -261,13 +338,23 @@ namespace Tizen.AIAvatar
                         if (audioDucking.IsDucked)
                             audioDucking?.Deactivate();
 
+                        Log.Debug(LogTag, "Audio is paused.");
+                    }
+                    catch (NullReferenceException e)
+                    {
+                        Log.Error(LogTag, $"NullReferenceException in Paused state: {e.Message}");
+                    }
+                    catch (Exception e)
+                    {
+                        Log.Info(LogTag, $"PlayinnState: {e.Message}");
+                    }
+                    break;
 
-                        break;
+                case AudioPlayerState.Stopped:
+                case AudioPlayerState.Finished:
 
-                    case AudioPlayerState.Stopped:
-                    case AudioPlayerState.Finished:
-                        Log.Debug(LogTag, "Audio is stopped.");
-
+                    try
+                    {
                         bufferChecker?.Stop();
                         audioPlayback?.Pause();
                         audioPlayback?.Unprepare();
@@ -278,13 +365,20 @@ namespace Tizen.AIAvatar
                         streamIndex = 0;
                         audioStream = baseAudioStream;
 
-                        break;
-                }
+                        Log.Debug(LogTag, "Audio is stopped.");
+                    }
+                    catch (NullReferenceException e)
+                    {
+                        Log.Error(LogTag, $"NullReferenceException in Stopped/Finished state: {e.Message}");
+                    }
+                    catch (Exception e)
+                    {
+                        Log.Info(LogTag, $"PlayinnState: {e.Message}");
+                    }
+
+                    break;
             }
-            catch (Exception e)
-            {
-                //Log.Error(LogTag, $"Failed to StateChanged. {e.Message}");
-            }
+
         }
 
         private void OnBufferAvailable(object sender, AudioPlaybackBufferAvailableEventArgs args)

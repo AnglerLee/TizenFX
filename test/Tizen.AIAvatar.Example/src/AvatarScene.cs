@@ -17,6 +17,7 @@
 
 using global::System;
 using System.IO;
+using Tizen;
 using Tizen.NUI;
 using Tizen.NUI.Scene3D;
 
@@ -32,16 +33,10 @@ namespace AIAvatar
 
         private AIAvatar defaultAIAvatar;
         
-        private bool isBlink = false;
         private bool isShowing = true;
 
         private float iblFactor = 0.3f;
-
-        public AIAvatar AIAvatar
-        {
-            get => defaultAIAvatar;
-        }
-
+            
         public float IBLFactor
         {
             get
@@ -54,7 +49,9 @@ namespace AIAvatar
                 ImageBasedLightScaleFactor = value;
             }
         }
-        
+
+        private Timer TestTimer;
+        private Timer changeTimer;
         public AvatarScene()
         {
             PivotPoint = Tizen.NUI.PivotPoint.TopLeft;
@@ -69,6 +66,24 @@ namespace AIAvatar
 
             // Setup Default Avatar Position & Orientation
             SetupDefaultAvatar();
+
+            TestTimer = new Timer(2000);
+            TestTimer.Tick += (sender, args) =>
+            {
+                defaultAIAvatar?.PlayRandomBodyAnimation();
+                Log.Debug(Utils.LogTag, "TestTimer PlayRandomBodyAnimation");
+                return false;
+            };
+
+            changeTimer = new Timer(8000);
+            changeTimer.Tick += (sender, args) =>
+            {
+                ChangeAvatar();
+                Log.Debug(Utils.LogTag, "changeTimer PlayRandomBodyAnimation");
+                return false;
+            };
+
+
 
         }
 
@@ -107,52 +122,80 @@ namespace AIAvatar
         public void ChangeAvatar()
         {
             DestroyAvatar();
-            CreateAvatar();
+            defaultAIAvatar = CreateAvatar(resourcePath + "/Model/Default/model_external.gltf");
+            Add(defaultAIAvatar);
 
         }
 
-        internal static string GetFileNameWithoutExtension(string path)
+        public void TriggerRandomBodyAnimation()
         {
-            return System.IO.Path.GetFileNameWithoutExtension(path);
+            defaultAIAvatar.PlayRandomBodyAnimation();
         }
 
-
-
-        private byte[] ReadAllBytes(string path)
+        public void TriggerMultipleFacialAnimations()
         {
-            try
-            {
-                var bytes = File.ReadAllBytes(path);
-                return bytes;
-            }
-            catch (Exception)
-            {
-                return null;
-            }
+            defaultAIAvatar.PlayMultipleFacialAnimations();
         }
+
+        public void TriggerExpressionAniatmion()
+        {
+            defaultAIAvatar.PlayExpressionAniatmion();
+        }
+
+        public void TriggerLipSync()
+        {
+            defaultAIAvatar.PlayLipSync();
+        }
+
+        public void TriggerAudioLipSync()
+        {
+            defaultAIAvatar.PlayAudioLipSync();
+        }
+
+        public void TriggerEyeBlink()
+        {
+            defaultAIAvatar.StartEyeBlink();
+        }
+
+        public void TriggerPauseAnimations()
+        {
+            defaultAIAvatar.PauseAnimations();
+        }
+
+        public void TriggerStopAnimations()
+        {
+            defaultAIAvatar.StopAnimations();
+        }
+
+
+        public void TriggerSamsungAIService()
+        {
+            defaultAIAvatar.TestSamsungAIService();
+        }
+
+
 
         private void SetupDefaultAvatar()
         {
-            defaultAIAvatar = CreateAvatar();
+            defaultAIAvatar = CreateAvatar(resourcePath + "/Model/Default/model_external.gltf");
             Add(defaultAIAvatar);
-            
-            
             
         }
 
-        private AIAvatar CreateAvatar()
+        private AIAvatar CreateAvatar(string path)
         {
-            AIAvatar avatar = new AIAvatar(resourcePath + "/Model/Default/model_external.gltf")
+            AIAvatar avatar = new AIAvatar(path)
             {
                 Position = new Position(0.0f, -1.70f, -2.0f),
                 Size = new Size(1.0f, 1.0f, 1.0f),
                 Orientation = new Rotation(new Radian(new Degree(0.0f)), Vector3.YAxis)
             };
-                        
+
 
             avatar.ResourcesLoaded += (sender, args) => 
             {
                 avatar.Initialize();
+                Log.Debug(Utils.LogTag, "Resource Loaded");
             };
 
             return avatar;
@@ -161,7 +204,12 @@ namespace AIAvatar
 
         private void DestroyAvatar()
         {
-            defaultAIAvatar.Dispose();
+            if (defaultAIAvatar != null)
+            {
+                Remove(defaultAIAvatar);
+                defaultAIAvatar.Dispose();
+                defaultAIAvatar = null;
+            }
         }
 
     

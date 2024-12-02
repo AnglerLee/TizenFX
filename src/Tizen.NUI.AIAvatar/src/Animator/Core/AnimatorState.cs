@@ -15,55 +15,46 @@
  *
  */
 
-using System;
-
-namespace Tizen.AIAvatar
+namespace Tizen.NUI.AIAvatar
 {
     /// <summary>
-    /// Defines the capabilities that an AI service can support.
+    /// Enumeration for the states.
     /// </summary>
-    [Flags]
-    public enum ServiceCapabilities
+    public enum AnimatorState
     {
         /// <summary>
-        /// No capabilities.
+        ///  Fail state.
         /// </summary>
-        None = 0,
+        Failed = -1,
 
         /// <summary>
-        /// Capability for Text-to-Speech service.
+        /// Ready state.
         /// </summary>
-        TextToSpeech = 1,
+        Ready = 0,
 
         /// <summary>
-        /// Capability for Speech-to-Text service.
+        /// Playing state.
         /// </summary>
-        SpeechToText = 2,
+        Playing = 3,
 
         /// <summary>
-        /// Capability for Large Language Model service.
+        /// Paused state.
         /// </summary>
-        LargeLanguageModel = 4,
+        Paused = 4,
 
         /// <summary>
-        /// Capability for Vision-related service.
+        /// Stopped state.
         /// </summary>
-        Vision = 8
-    }
-
-    /// <summary>
-    /// Represents a generic AI service interface.
-    /// </summary>
-    public interface IAIService
-    {
-        /// <summary>
-        /// Gets the name of the AI service.
-        /// </summary>
-        string ServiceName { get; }
+        Stopped = 5,
 
         /// <summary>
-        /// Gets the capabilities of the AI service.
+        /// AnimationFinished state.
         /// </summary>
-        ServiceCapabilities Capabilities { get; }
-    }
+        AnimationFinished = 6,
+
+        /// <summary>
+        /// Unavailable state.
+        /// </summary>
+        Unavailable
+    };
 }

@@ -111,7 +111,7 @@ namespace AIAvatar
                 return;
             }
 
-            if (e.Key.KeyPressedName == "Escape" || e.Key.KeyPressedName == "XF86Back" || e.Key.KeyPressedName == "BackSpace")
+            if (e.Key.KeyPressedName == "Escape" || e.Key.KeyPressedName == "BackSapce")
             {
                 ExitApplication();
             }

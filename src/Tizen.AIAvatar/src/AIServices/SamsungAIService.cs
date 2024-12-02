@@ -69,11 +69,13 @@ namespace Tizen.AIAvatar
         private const float audioTailLengthFactor = 0.015f;
         private const float audioBufferMultiflier = 2f;
 
+                
         private int audioLength;
         private int desiredBufferLength;
         private int audioTailLength;
         private byte[] recordedBuffer;
         private byte[] audioMainBuffer;
+        private List<Byte> audioSyncBuffer;
         private float desiredBufferDuration = audioLengthFactor + audioTailLengthFactor;
 
         /// <summary>
@@ -176,7 +178,7 @@ namespace Tizen.AIAvatar
                 {
                     model = config.Model,
                     messages = messages,
-                    temperature = options?["temperature"] ?? 0.5,
+                    temperature = options?.GetValueOrDefault("temperature", 0.5) ?? 0.5,
                     seed = options?.GetValueOrDefault("seed", 0)
                 });
             }
@@ -201,13 +203,13 @@ namespace Tizen.AIAvatar
         /// <param name="voice">Optional parameter to specify the voice type.</param>
         /// <param name="options">Optional parameters for customizing speech output.</param>
         /// <returns>A task representing the asynchronous operation, with a byte array of the generated audio data.</returns>
-        public async Task<byte[]> TextToSpeechAsync(
-            string text,
-            string voice = null,
-            Dictionary<string, object> options = null)
+        public async Task<byte[]> TextToSpeechAsync(string text, string voice = null, Dictionary<string, object> options = null)
         {
+            audioSyncBuffer = new List<byte>();
 
-            return null;
+            await TextToSpeechStreamAsync(text,voice, options).ConfigureAwait(false);
+
+            return audioSyncBuffer.ToArray();
         }
 
         /// <summary>
@@ -247,7 +249,7 @@ namespace Tizen.AIAvatar
 
                 ttsHandle.Play();
 
-                await ttsCompletionSource.Task;
+                await ttsCompletionSource.Task.ConfigureAwait(false);
             }
             catch (Exception ex)
             {
@@ -259,6 +261,18 @@ namespace Tizen.AIAvatar
                     AudioData = Array.Empty<byte>()
                 });
             }
+        }
+
+        /// <summary>
+        /// Releases all resources used by the AI service.
+        /// </summary>
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                ttsHandle?.Dispose();
+            }
+            base.Dispose(disposing);
         }
 
         /// <summary>
@@ -295,6 +309,7 @@ namespace Tizen.AIAvatar
 
                     case SynthesizedPcmEvent.Continue:
 
+                        audioSyncBuffer?.AddRange(e.Data);
                         recordedBuffer = recordedBuffer.Concat(e.Data).ToArray();
 
                         if (recordedBuffer.Length >= desiredBufferLength)

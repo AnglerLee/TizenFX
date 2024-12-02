@@ -14,14 +14,8 @@
   
   <ItemGroup>
     <ProjectReference Include="..\..\src\Tizen.AIAvatar\Tizen.AIAvatar.csproj" />
-    <ProjectReference Include="..\..\src\Tizen.AIAvatar.NUI\Tizen.AIAvatar.NUI.csproj" />
-    <ProjectReference Include="../../src/Tizen.NUI.Components/Tizen.NUI.Components.csproj" />
+    <ProjectReference Include="..\..\src\Tizen.NUI.AIAvatar\Tizen.NUI.AIAvatar.csproj" />
+    <ProjectReference Include="..\..\src\Tizen.NUI.Components\Tizen.NUI.Components.csproj" />
   </ItemGroup>
   
-  <ItemGroup>
-    <Folder Include="res\Intelligence\LLM\" />
-  </ItemGroup>
- 
-
-
 </Project>

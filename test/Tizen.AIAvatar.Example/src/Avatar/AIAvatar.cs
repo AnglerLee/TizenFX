@@ -4,7 +4,7 @@ using Tizen;
 using Tizen.NUI;
 using Tizen.NUI.Scene3D;
 using Tizen.AIAvatar;
-using Tizen.AIAvatar.NUI;
+using Tizen.NUI.AIAvatar;
 
 
 namespace AIAvatar
@@ -89,8 +89,7 @@ namespace AIAvatar
 
 
         public void Initialize()
-        {
-
+        {      
             InitializeBodyAnimations();
             InitializeFaceAnimations();
             InitializeCustomAnimations();
@@ -158,7 +157,8 @@ namespace AIAvatar
             try
             {
                 lipSyncer.Stop();
-                Animation lipAnimation = lipSyncer.GenerateAnimationFromVowels(testVowels, 0.08f);
+                Animation lipAnimation = lipSyncer.GenerateAnimationFromVowels(testVowels);
+                lipAnimation.Play();
                 lipSyncer.Enqueue(lipAnimation);
                 lipSyncer.Play();
 
@@ -171,32 +171,15 @@ namespace AIAvatar
 
         public void PlayAudioLipSync()
         {
+            audio2Vowels.SetSampleRate(waveData.SampleRate);
+            testVowels = audio2Vowels.PredictVowels(waveData.RawAudioData);
             PlayLipSync();
-
+            
             audioPlayer.Stop();
-
-            audio2Vowels.SetSampleRate(waveData.SampleRate);
-            testVowels = audio2Vowels.PredictVowels(waveData.RawAudioData);
-            Log.Info(Utils.LogTag, $"{string.Join(", ", testVowels)}");
-
             audioPlayer.Play(waveData.RawAudioData, waveData.SampleRate);
-
-        }
-
-        public void PlayAudioLipSyncStream()
-        {
-            PlayStreamingLipSync();
-
-            audioPlayer.Stop();
-
-            audio2Vowels.SetSampleRate(waveData.SampleRate);
-            testVowels = audio2Vowels.PredictVowels(waveData.RawAudioData);
+            
             Log.Info(Utils.LogTag, $"{string.Join(", ", testVowels)}");
-
-            audioPlayer.Play(waveData.RawAudioData, waveData.SampleRate);
         }
-
-
 
         public void PauseAnimations()
         {
@@ -224,7 +207,6 @@ namespace AIAvatar
                 Log.Error(Utils.LogTag, "An error occurred while Play the eye blink: " + ex.Message);
             }
         }
-
 
         private void InitializeFaceAnimations()
         {

@@ -209,7 +209,7 @@ namespace Tizen.AIAvatar
                     AudioData = Array.Empty<byte>()
                 });
 
-                var response = await client.ExecuteAsync(request);
+                var response = await client.ExecuteAsync(request).ConfigureAwait(false);
                 if (!response.IsSuccessful)
                 {
                     throw new Exception($"OpenAI TTS Error: {response.ErrorMessage}");

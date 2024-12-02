@@ -4,16 +4,19 @@ using System.IO;
 using System.Threading.Tasks;
 using Tizen;
 using Tizen.AIAvatar;
-using Tizen.AIAvatar.NUI;
-using Tizen.Applications;
 using Tizen.NUI;
 using Tizen.NUI.Scene3D;
-using static System.Net.Mime.MediaTypeNames;
 
 namespace AIAvatar
 {    
     public partial class AIAvatar : Model
     {
+        private enum TaskID
+        {
+            Default,
+            SamLLM,
+            SamSLM
+        }
 
         private SamsungAIService samsungAIService;
         private SamsungAIConfiguration samsungAIConfig;
@@ -39,8 +42,7 @@ namespace AIAvatar
 
         public void TestSamsungAIService()
         {
-            TestSamsungTextGeneration(samsungAIService);
-            
+            TestSamsungTextGeneration(samsungAIService);            
         }
 
         #region SamsungAI Services
@@ -50,7 +52,8 @@ namespace AIAvatar
         {
             var task = Task.Run(async () =>
             {
-                await samsungAIService.GenerateTextAsync(Utils.TTSText).ConfigureAwait(true);
+                var options = new Dictionary<string, object> { { "TaskID", (int)TaskID.SamLLM } };
+                await samsungAIService.GenerateTextAsync(Utils.TTSText, options).ConfigureAwait(true);
             });
 
         }
@@ -198,24 +201,26 @@ namespace AIAvatar
                 return;
             }
 
-            switch (e.TaskID)
+            switch ((TaskID)e.TaskID)
             {
-                case 0:
+                case TaskID.Default:
+                    //default
+                    break;
+                case TaskID.SamLLM:
                     var task = Task.Run(async () =>
                     {
-                        var options = new Dictionary<string, object> { { "promptFilePath", Utils.ResourcePath + "/Intelligence/LLM/emotion1B.json" }, {"TaskID", 1 } };
+                        var options = new Dictionary<string, object> { { "promptFilePath", Utils.ResourcePath + "/Intelligence/LLM/emotion1B.json" }, {"TaskID", (int)TaskID.SamSLM } };
                         await samsungAIService.GenerateTextAsync(e.Text, options).ConfigureAwait(false);
                     }).ContinueWith(t => TestSamsungTTS(e.Text));
-                    
-                    Log.Info(Utils.LogTag, $"Response[0]: {e.Text}");
                     break;
-                case 1:
+                case TaskID.SamSLM:
                     emotionAnimator.Play(e.Text);
                     PlayRandomBodyAnimation();
-                    Log.Info(Utils.LogTag, $"Response[1]: {e.Text}");
                     break;
-            }           
-            
+            }
+
+            Log.Info(Utils.LogTag, $"Response[{e.TaskID}]: {e.Text}");
+
         }
 
         private void OnTtsStart(object sender, ttsStreamingEventArgs e)

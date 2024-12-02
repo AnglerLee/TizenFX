@@ -22,7 +22,7 @@ namespace Tizen.AIAvatar
     /// <summary>
     /// Abstract base class for AI services, providing common functionalities.
     /// </summary>
-    public abstract class BaseAIService : IAIService
+    public abstract class BaseAIService : IAIService, IDisposable
     {
         /// <summary>
         /// Gets the name of the AI service.
@@ -59,7 +59,19 @@ namespace Tizen.AIAvatar
         /// </summary>
         public virtual void Dispose()
         {
-            ClientManager?.Dispose();
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        /// <summary>
+        /// Releases all resources used by the AI service.
+        /// </summary>
+        protected virtual void Dispose(bool disposing)
+        {
+            if (disposing && ClientManager != null)
+            {
+                ClientManager.Dispose();
+            }
         }
     }
 }
