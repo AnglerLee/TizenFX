@@ -139,7 +139,7 @@ namespace Tizen.NUI.AIAvatar
 
                 foreach (string filename in expression.filename)
                 {   
-                    string expressionFile = expressionResourcePath + filename;
+                    string expressionFile = global::System.IO.Path.Combine(expressionResourcePath, filename);
 
                     if (!File.Exists(expressionFile))
                     {

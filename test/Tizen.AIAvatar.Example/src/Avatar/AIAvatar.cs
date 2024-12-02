@@ -27,8 +27,8 @@ namespace AIAvatar
         private List<MotionInfo> bodyMotions = new List<MotionInfo>();
         private List<MotionInfo> customMotions = new List<MotionInfo>();
 
-        private readonly string BodyMotionResourcePath = "/Model/Animation/Body/";
-        private readonly string FaceMotionResourcePath = "/Model/Animation/Face/";
+        private readonly string BodyMotionResourcePath = "/Animation/Body/";
+        private readonly string FaceMotionResourcePath = "/Animation/Face/";
 
         private string[] testVowels = { "sil", "A", "E", "I", "O", "U", "A", "E", "I", "O", "U", "sil", "ER", "HM", "sil", "sil" };
 
@@ -71,7 +71,7 @@ namespace AIAvatar
                         )
                     );
 
-                emotionAnimator.LoadEmotionConfig(Utils.ResourcePath + "/Intelligence/LLM/emoji_emotion_config.json", Utils.ResourcePath + "/Model/Animation/Expression");
+                emotionAnimator.LoadEmotionConfig(Utils.ResourcePath + "/Intelligence/LLM/emoji_emotion_config.json", Utils.ResourcePath + "/Animation/Expression");
             }
             catch (Exception e)
             {
@@ -278,7 +278,7 @@ namespace AIAvatar
         private void InitializeLipSync()
         {
             lipSyncer = new LipSyncer();
-            lipSyncer.Initialize(this, Utils.ResourcePath + "/Model/emoji_viseme_blendshapes.json");
+            lipSyncer.Initialize(this, Utils.ResourcePath + "/Intelligence/LipSync/emoji_viseme_blendshapes.json");
             lipSyncer.AnimatorStateChanged += OnAnimationStateChanged;
 
             audio2Vowels = new Audio2Vowels(Utils.ResourcePath + "/Intelligence/LipSync/audio2vowel_7.tflite");

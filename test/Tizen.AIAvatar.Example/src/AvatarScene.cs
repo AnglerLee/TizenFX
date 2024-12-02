@@ -15,12 +15,11 @@
  *
  */
 
-using global::System;
-using System.IO;
 using Tizen;
 using Tizen.NUI;
 using Tizen.NUI.Scene3D;
-
+using System.Collections.Generic;
+using System.IO;
 
 namespace AIAvatar
 {
@@ -32,7 +31,9 @@ namespace AIAvatar
         private const int sceneTransitionDurationMilliSeconds = 1500;
 
         private AIAvatar defaultAIAvatar;
-        
+        private List<string> avatarPathList = new List<string>();
+        private int avatarIndex = 0;
+
         private bool isShowing = true;
 
         private float iblFactor = 0.3f;
@@ -50,8 +51,6 @@ namespace AIAvatar
             }
         }
 
-        private Timer TestTimer;
-        private Timer changeTimer;
         public AvatarScene()
         {
             PivotPoint = Tizen.NUI.PivotPoint.TopLeft;
@@ -66,25 +65,6 @@ namespace AIAvatar
 
             // Setup Default Avatar Position & Orientation
             SetupDefaultAvatar();
-
-            TestTimer = new Timer(2000);
-            TestTimer.Tick += (sender, args) =>
-            {
-                defaultAIAvatar?.PlayRandomBodyAnimation();
-                Log.Debug(Utils.LogTag, "TestTimer PlayRandomBodyAnimation");
-                return false;
-            };
-
-            changeTimer = new Timer(8000);
-            changeTimer.Tick += (sender, args) =>
-            {
-                ChangeAvatar();
-                Log.Debug(Utils.LogTag, "changeTimer PlayRandomBodyAnimation");
-                return false;
-            };
-
-
-
         }
 
 
@@ -122,7 +102,10 @@ namespace AIAvatar
         public void ChangeAvatar()
         {
             DestroyAvatar();
-            defaultAIAvatar = CreateAvatar(resourcePath + "/Model/Default/model_external.gltf");
+
+            avatarIndex = (avatarIndex + 1) % avatarPathList.Count;
+
+            defaultAIAvatar = CreateAvatar(avatarPathList[avatarIndex] + "/model_external.gltf");
             Add(defaultAIAvatar);
 
         }
@@ -174,10 +157,31 @@ namespace AIAvatar
         }
 
 
+        public bool CheckFilesInFolder(string folderPath, params string[] fileExtensions)
+        {
+            foreach (var extension in fileExtensions)
+            {
+                if (Directory.GetFiles(folderPath, $"*{extension}").Length > 0)
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
 
         private void SetupDefaultAvatar()
         {
-            defaultAIAvatar = CreateAvatar(resourcePath + "/Model/Default/model_external.gltf");
+            var avatarPaths = Directory.GetDirectories(resourcePath + "/Model/");
+            foreach (var directoryInfo in avatarPaths)
+            {                
+                Log.Info(Utils.LogTag, $"Model Path : {directoryInfo}");
+                if(CheckFilesInFolder(directoryInfo, ".gltf", ".GLTF"))
+                {
+                    avatarPathList.Add(directoryInfo);
+                }
+            }
+
+            defaultAIAvatar = CreateAvatar(avatarPathList[avatarIndex] + "/model_external.gltf");
             Add(defaultAIAvatar);
             
         }
