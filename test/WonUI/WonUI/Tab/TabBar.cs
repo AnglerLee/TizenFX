@@ -19,6 +19,7 @@ namespace Tizen.WonUI
 
         public TabBar()
         {
+            Layout =  new LinearLayout() { LinearOrientation = LinearLayout.Orientation.Horizontal };
             _itemContainer = new View();
             _itemContainer.Layout = new LinearLayout
             {
