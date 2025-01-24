@@ -1,0 +1,19 @@
+# csproj file path
+csproj_file: WonUI.csproj
+
+# Default profile, Tizen API version
+profile: tizen
+api_version: "9.0"
+
+# Build type [Debug/ Release/ Test]
+build_type: Debug
+
+# files monitored for dirty/modified status
+files:
+  - WonUI.csproj
+  - WonUI.cs
+  - tizen-manifest.xml
+  - shared/res/WonUI.png
+
+# project dependencies
+deps: []
