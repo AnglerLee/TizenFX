@@ -1,11 +1,20 @@
 ﻿using System;
+using System.Reflection.Metadata;
 using Tizen.NUI;
 using Tizen.NUI.BaseComponents;
+using Tizen.NUI.Components;
+using Tizen.WonUI;
 
 namespace WonUI
 {
     class Program : NUIApplication
     {
+
+        private Window window;
+        private Navigator navigator;
+        private View content;
+
+
         protected override void OnCreate()
         {
             base.OnCreate();
@@ -14,22 +23,34 @@ namespace WonUI
 
         void Initialize()
         {
-            Window.Instance.KeyEvent += OnKeyEvent;
+            window = NUIApplication.GetDefaultWindow();
+            navigator = window.GetDefaultNavigator();
 
-            TextLabel text = new TextLabel("Hello Tizen NUI World");
-            text.HorizontalAlignment = HorizontalAlignment.Center;
-            text.VerticalAlignment = VerticalAlignment.Center;
-            text.TextColor = Color.Blue;
-            text.PointSize = 12.0f;
-            text.HeightResizePolicy = ResizePolicyType.FillToParent;
-            text.WidthResizePolicy = ResizePolicyType.FillToParent;
-            Window.Instance.GetDefaultLayer().Add(text);
+            content = new TextLabel()
+            {
+                Text = "Content#1",
+                BackgroundColor = Color.Red,
+                WidthSpecification = LayoutParamPolicies.MatchParent,
+                HeightSpecification = LayoutParamPolicies.MatchParent,
+                HorizontalAlignment = HorizontalAlignment.Center,
+                VerticalAlignment = VerticalAlignment.Center,
+            };
 
-            Animation animation = new Animation(2000);
-            animation.AnimateTo(text, "Orientation", new Rotation(new Radian(new Degree(180.0f)), PositionAxis.X), 0, 500);
-            animation.AnimateTo(text, "Orientation", new Rotation(new Radian(new Degree(0.0f)), PositionAxis.X), 500, 1000);
-            animation.Looping = true;
-            animation.Play();
+            var tabbar = new Tizen.WonUI.TabBar()
+            {
+                BackgroundColor = Color.White,
+                Name = "TabBar"
+            };
+
+            tabbar.Add(new Tizen.WonUI.TabItem()
+            {
+                Name = "ItemTab",
+                Text = "TabItem1",
+                ResourceUrl = "image.png",                
+            });
+
+            navigator.Add(content);
+            navigator.Add(tabbar);
         }
 
         public void OnKeyEvent(object sender, Window.KeyEventArgs e)
