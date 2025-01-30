@@ -18,6 +18,13 @@ namespace Tizen.WonUI
         {
             Padding = 8;
             Spacing = 8;
+
+            Layout = new LinearLayout
+            {
+                LinearOrientation = LinearLayout.Orientation.Vertical,
+                HorizontalAlignment = HorizontalAlignment.Center,
+                VerticalAlignment = VerticalAlignment.Center
+            };
         }
 
         public string Text
