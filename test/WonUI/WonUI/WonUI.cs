@@ -4,6 +4,7 @@ using Tizen.NUI;
 using Tizen.NUI.BaseComponents;
 using Tizen.NUI.Components;
 using Tizen.WonUI.Basic;
+using Tizen.WonUI.Normal;
 
 namespace WonUI
 {
@@ -18,17 +19,80 @@ namespace WonUI
         protected override void OnCreate()
         {
             base.OnCreate();
-            InitializeBasic();
+            Initialize();
+
+
         }
 
         void Initialize()
         {
+            window = NUIApplication.GetDefaultWindow();
+            navigator = window.GetDefaultNavigator();
+            navigator.BackgroundColor = Color.White;
+            navigator.Layout = new LinearLayout
+            {
+                LinearOrientation = LinearLayout.Orientation.Vertical,
+                HorizontalAlignment = HorizontalAlignment.Center,
+            };
+        
+
+            // 탭 바 생성
+            var tabBar = new Tizen.WonUI.Normal.TabBar();
+            //Tizen.WonUI.Normal.TabStyle.ApplyDefaultTheme(tabBar);
+
+            var homeTab = new TabItemBuilder()
+                .SetIcon("/res/images/home_icon.png")
+                .SetText("Home")
+                .Build();
+
+            var settingsTab = new TabItemBuilder()
+                .SetIcon("/res/images/settings_icon.png")
+                .SetText("Settings")
+                .SetBadge(3)
+                .Build();
+
+            tabBar.AddItem(homeTab);
+            tabBar.AddItem(settingsTab);
+
+            // 컨텐츠 영역
+            var contentView = new View
+            {
+                BackgroundColor = Color.White,
+                Layout = new LinearLayout
+                {
+                    LinearOrientation = LinearLayout.Orientation.Vertical,
+                     HorizontalAlignment = HorizontalAlignment.Center,
+                    VerticalAlignment = VerticalAlignment.Center
+                }
+            };
+            
+            navigator.Add(tabBar);
+            navigator.Add(contentView);
+            
+            
+
+            tabBar.ItemSelected += (s, e) =>
+            {
+                for (int i = contentView.Children.Count - 1; i >= 0; i--)
+                {
+                    contentView.Remove(contentView.Children[i]);
+                }
+                // 선택된 탭에 따른 컨텐츠 업데이트
+                var newContent = new TextLabel
+                {
+                    Text = $"Selected: {e.SelectedItem.TabText.Text}",
+                    TextColor = Color.Black,
+                };
+                contentView.Add(newContent);
+            };
+
+
         }
         void InitializeBasic()
         {
             window = NUIApplication.GetDefaultWindow();
             navigator = window.GetDefaultNavigator();
-            
+
             content = new TextLabel()
             {
                 Text = "Content#1",
@@ -39,7 +103,7 @@ namespace WonUI
                 VerticalAlignment = VerticalAlignment.Center,
             };
 
-            var tabBar = new  Tizen.WonUI.Basic.TabBar
+            var tabBar = new Tizen.WonUI.Basic.TabBar
             {
                 TabBarBackgroundColor = Color.LightGray,
                 Spacing = 20,
@@ -56,7 +120,7 @@ namespace WonUI
                 CornerRadius = 10
             };
 
-             var searchTab = new Tizen.WonUI.Basic.TabItem("Search", "Search Content")
+            var searchTab = new Tizen.WonUI.Basic.TabItem("Search", "Search Content")
             {
                 BackgroundColor = Color.Red,
                 SelectedBackgroundColor = Color.Orange,
@@ -73,7 +137,7 @@ namespace WonUI
             navigator.Add(content);
             navigator.Add(tabBar);
 
-            
+
         }
 
         public void OnKeyEvent(object sender, Window.KeyEventArgs e)
