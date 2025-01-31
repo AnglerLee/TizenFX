@@ -3,7 +3,7 @@ using System.Reflection.Metadata;
 using Tizen.NUI;
 using Tizen.NUI.BaseComponents;
 using Tizen.NUI.Components;
-using Tizen.WonUI;
+using Tizen.WonUI.Basic;
 
 namespace WonUI
 {
@@ -12,20 +12,23 @@ namespace WonUI
 
         private Window window;
         private Navigator navigator;
-        private View content;
+        private TextLabel content;
 
 
         protected override void OnCreate()
         {
             base.OnCreate();
-            Initialize();
+            InitializeBasic();
         }
 
         void Initialize()
         {
+        }
+        void InitializeBasic()
+        {
             window = NUIApplication.GetDefaultWindow();
             navigator = window.GetDefaultNavigator();
-
+            
             content = new TextLabel()
             {
                 Text = "Content#1",
@@ -36,21 +39,41 @@ namespace WonUI
                 VerticalAlignment = VerticalAlignment.Center,
             };
 
-            var tabbar = new Tizen.WonUI.TabBar()
+            var tabBar = new  Tizen.WonUI.Basic.TabBar
             {
-                BackgroundColor = Color.White,
-                Name = "TabBar"
+                TabBarBackgroundColor = Color.LightGray,
+                Spacing = 20,
+                Padding = new Extents(10, 10, 10, 10)
             };
 
-            tabbar.Add(new Tizen.WonUI.TabItem()
+            var homeTab = new Tizen.WonUI.Basic.TabItem("Home", "Home Content")
             {
-                Name = "ItemTab",
-                Text = "TabItem1",
-                ResourceUrl = "image.png",                
-            });
+                BackgroundColor = Color.Blue,
+                SelectedBackgroundColor = Color.Green,
+                TextColor = Color.White,
+                SelectedTextColor = Color.Yellow,
+                Margin = new Extents(5),
+                CornerRadius = 10
+            };
+
+             var searchTab = new Tizen.WonUI.Basic.TabItem("Search", "Search Content")
+            {
+                BackgroundColor = Color.Red,
+                SelectedBackgroundColor = Color.Orange,
+                TextColor = Color.White,
+                Padding = new Extents(15, 15, 15, 15)
+            };
+
+
+            tabBar.AddTab(homeTab);
+            tabBar.AddTab(searchTab);
+
+            tabBar.TabSelected += (value) => content.Text = value;
 
             navigator.Add(content);
-            navigator.Add(tabbar);
+            navigator.Add(tabBar);
+
+            
         }
 
         public void OnKeyEvent(object sender, Window.KeyEventArgs e)
