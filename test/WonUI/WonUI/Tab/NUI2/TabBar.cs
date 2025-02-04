@@ -18,12 +18,12 @@ namespace Tizen.WonUI
         public event EventHandler<SelectionChangedEventArgs> SelectionChanged;
 
         public TabBar()
-        {
-            Layout =  new LinearLayout() { LinearOrientation = LinearLayout.Orientation.Horizontal };
+        {            
             _itemContainer = new View();
             _itemContainer.Layout = new LinearLayout
             {
-                LinearOrientation = LinearLayout.Orientation.Horizontal
+                LinearOrientation = LinearLayout.Orientation.Horizontal,
+                VerticalAlignment = VerticalAlignment.Center,
             };
             Add(_itemContainer);
         }

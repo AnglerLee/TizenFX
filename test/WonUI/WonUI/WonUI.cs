@@ -34,6 +34,51 @@ namespace WonUI
                 LinearOrientation = LinearLayout.Orientation.Vertical,
                 HorizontalAlignment = HorizontalAlignment.Center,
             };
+
+            var tabBar = new Tizen.WonUI.TabBar(){BackgroundColor = Color.Black};
+
+            var tab1 = new Tizen.WonUI.TabItem()
+            {
+                BackgroundColor = Color.Beige,
+                Name = "Tab1",
+                Text = "Tab1",
+                HeightResizePolicy = ResizePolicyType.DimensionDependency
+            };
+
+            var tab2 = new Tizen.WonUI.TabItem()
+            {
+                BackgroundColor = Color.Beige,
+                 Name = "Tab2",
+                 ResourceUrl = "image.png",
+            };
+
+            var tab3 = new Tizen.WonUI.TabItem()
+            {
+                BackgroundColor = Color.Beige,
+                Name = "Tab3",
+                Text = "Tab3",
+                ResourceUrl = "image.png"
+            };
+
+            
+
+            tabBar.Add(tab1);
+            tabBar.Add(tab2);
+            tabBar.Add(tab3);
+
+            navigator.Add(tabBar);
+        }
+
+        void InitializeNormal()
+        {
+            window = NUIApplication.GetDefaultWindow();
+            navigator = window.GetDefaultNavigator();
+            navigator.BackgroundColor = Color.White;
+            navigator.Layout = new LinearLayout
+            {
+                LinearOrientation = LinearLayout.Orientation.Vertical,
+                HorizontalAlignment = HorizontalAlignment.Center,
+            };
         
 
             // 탭 바 생성

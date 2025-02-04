@@ -21,9 +21,7 @@ namespace Tizen.WonUI
 
             Layout = new LinearLayout
             {
-                LinearOrientation = LinearLayout.Orientation.Vertical,
-                HorizontalAlignment = HorizontalAlignment.Center,
-                VerticalAlignment = VerticalAlignment.Center
+                LinearOrientation = LinearLayout.Orientation.Vertical
             };
         }
 

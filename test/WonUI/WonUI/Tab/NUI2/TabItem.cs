@@ -14,6 +14,7 @@ namespace Tizen.WonUI
         public TabItem()
         {
             Content = new TabItemContent();
+            Add(Content);
         }
 
         public TabItemContent TabItemContent => Content as TabItemContent;
