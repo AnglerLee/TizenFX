@@ -3,6 +3,7 @@ using System.Reflection.Metadata;
 using Tizen.NUI;
 using Tizen.NUI.BaseComponents;
 using Tizen.NUI.Components;
+using Tizen.WonUI;
 using Tizen.WonUI.Basic;
 using Tizen.WonUI.Normal;
 
@@ -35,7 +36,40 @@ namespace WonUI
                 HorizontalAlignment = HorizontalAlignment.Center,
             };
 
-            var tabBar = new Tizen.WonUI.TabBar(){BackgroundColor = Color.Black};
+            var navigationBar = new NavigationBar()
+            {
+                BackgroundColor = Color.Black,
+                };
+
+            var navigationItem = new NavigationItem("hello", "hello", "res.png") {BackgroundColor = Color.Beige,
+            Padding = 10,    
+            };
+            var numericBadge = navigationItem.Badge as NumericBadge;
+            numericBadge.Value = 150;
+            numericBadge.IsVisible = true;
+
+            var navigationItem2 = new NavigationItem("hello2", "hello2", "res.png") { BackgroundColor = Color.Beige, 
+            Padding = 10,
+            };
+
+            navigationBar.Add(navigationItem);
+            navigationBar.Add(navigationItem2);
+
+            navigator.Add(navigationBar);
+
+        }
+        void InitializeNUI2()
+        {
+            window = NUIApplication.GetDefaultWindow();
+            navigator = window.GetDefaultNavigator();
+            navigator.BackgroundColor = Color.White;
+            navigator.Layout = new LinearLayout
+            {
+                LinearOrientation = LinearLayout.Orientation.Vertical,
+                HorizontalAlignment = HorizontalAlignment.Center,
+            };
+
+            var tabBar = new Tizen.WonUI.TabBar() { BackgroundColor = Color.Black };
 
             var tab1 = new Tizen.WonUI.TabItem()
             {
@@ -48,8 +82,8 @@ namespace WonUI
             var tab2 = new Tizen.WonUI.TabItem()
             {
                 BackgroundColor = Color.Beige,
-                 Name = "Tab2",
-                 ResourceUrl = "image.png",
+                Name = "Tab2",
+                ResourceUrl = "image.png",
             };
 
             var tab3 = new Tizen.WonUI.TabItem()
@@ -60,7 +94,7 @@ namespace WonUI
                 ResourceUrl = "image.png"
             };
 
-            
+
 
             tabBar.Add(tab1);
             tabBar.Add(tab2);
@@ -79,7 +113,7 @@ namespace WonUI
                 LinearOrientation = LinearLayout.Orientation.Vertical,
                 HorizontalAlignment = HorizontalAlignment.Center,
             };
-        
+
 
             // 탭 바 생성
             var tabBar = new Tizen.WonUI.Normal.TabBar();
@@ -106,15 +140,15 @@ namespace WonUI
                 Layout = new LinearLayout
                 {
                     LinearOrientation = LinearLayout.Orientation.Vertical,
-                     HorizontalAlignment = HorizontalAlignment.Center,
+                    HorizontalAlignment = HorizontalAlignment.Center,
                     VerticalAlignment = VerticalAlignment.Center
                 }
             };
-            
+
             navigator.Add(tabBar);
             navigator.Add(contentView);
-            
-            
+
+
 
             tabBar.ItemSelected += (s, e) =>
             {
